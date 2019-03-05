@@ -1,0 +1,11 @@
+# from any subdir, matching this name
+.vs/
+Debug/
+Release/
+x64/
+
+# from root
+/Lib/
+
+
+#exception
