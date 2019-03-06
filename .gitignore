@@ -6,6 +6,7 @@ x64/
 
 # from root
 /Lib/
-
+*.dll
+*.lib
 
 #exception

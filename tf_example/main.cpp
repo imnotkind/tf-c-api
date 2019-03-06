@@ -323,7 +323,7 @@ int realmodel()
 
 
 	int64 starttime = getTickCount();
-	for (int i = 0; i < 1000; i++)
+	//for (int i = 0; i < 1000; i++)
 	{
 		TF_SessionRun(sess,
 			nullptr, // Run options.
