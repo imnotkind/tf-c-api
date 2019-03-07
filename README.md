@@ -11,6 +11,8 @@
 
 https://www.tensorflow.org/install/lang_c 에서 `Windows GPU only` 다운로드, 압축 해제
 
+https://storage.googleapis.com/tensorflow 여기서 신버전들의 prebuilt를 발견할 수 있다
+
 prebuilt를 사용하려면 빌드된 대상 CUDA 버전을 알아야한다!!! 
 
 https://www.tensorflow.org/install/source_windows 여기서 확인 (1.12.0은 CUDA 9.0을 깔아야함, 9.2는 안 되니 주의)
