@@ -396,7 +396,7 @@ int realmodel()
 
 int main() {
 	
-
+	_putenv("CUDA_VISIBLE_DEVICES=0");
 
 	realmodel();
 	
