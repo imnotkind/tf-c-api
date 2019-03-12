@@ -9,7 +9,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <tensorflow/c/c_api.h>
+#include <c_api.h>
 
 typedef struct model_t {
   TF_Graph* graph;

@@ -1,4 +1,4 @@
-#include "tf_utils.hpp"
+#include <tf_utils.hpp>
 #include <iostream>
 #include <vector>
 #include <opencv2/opencv.hpp>
@@ -58,7 +58,7 @@ int practicemodel()
 {
 	std::cout << "TensorFlow Version: " << TF_Version() << std::endl;
 
-	TF_Graph* graph = tf_utils::LoadGraphDef("graph.pb");
+	TF_Graph* graph = tf_utils::LoadGraph("frozen_graph/graph.pb");
 	if (graph == nullptr) {
 		std::cout << "Can't load graph" << std::endl;
 		return 1;
@@ -145,7 +145,7 @@ int practicemodel()
 
 int practicemodel2()
 {
-	TF_Graph* graph = tf_utils::LoadGraphDef("graph.pb");
+	TF_Graph* graph = tf_utils::LoadGraph("frozen_graph/graph.pb");
 	if (graph == nullptr) {
 		std::cout << "Can't load graph" << std::endl;
 		return 1;
@@ -230,7 +230,7 @@ int practicemodel2()
 
 int realmodel()
 {
-	TF_Graph* graph = tf_utils::LoadGraphDef("mymodel.pb");
+	TF_Graph* graph = tf_utils::LoadGraph("frozen_graph/mymodel.pb");
 	if (graph == nullptr) {
 		std::cout << "Can't load graph" << std::endl;
 		return 1;
