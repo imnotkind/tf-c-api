@@ -9,7 +9,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <Link>
-      <AdditionalDependencies>tensorflow.lib;opecv_world401d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>tensorflow.lib;opencv_world401d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup />

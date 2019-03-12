@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <unistd.h>
+#include <io.h>
 
 #include <c_api.h>
 
@@ -67,6 +67,7 @@ int main(int argc, char** argv) {
 
   printf("Saving checkpoint\n");
   if (!ModelCheckpoint(&model, checkpoint_prefix, SAVE)) return 1;
+
 
   ModelDestroy(&model);
 }
@@ -233,7 +234,7 @@ int Okay(TF_Status* status) {
 }
 
 TF_Buffer* ReadFile(const char* filename) {
-  int fd = open(filename, 0);
+  int fd = _open(filename, 0);
   if (fd < 0) {
     perror("failed to open file: ");
     return NULL;
@@ -244,7 +245,7 @@ TF_Buffer* ReadFile(const char* filename) {
     return NULL;
   }
   char* data = (char*)malloc(stat.st_size);
-  ssize_t nread = read(fd, data, stat.st_size);
+  int nread = _read(fd, data, stat.st_size);
   if (nread < 0) {
     perror("failed to read file: ");
     free(data);
@@ -266,7 +267,7 @@ TF_Tensor* ScalarStringTensor(const char* str, TF_Status* status) {
   TF_Tensor* t = TF_AllocateTensor(TF_STRING, NULL, 0, nbytes);
   void* data = TF_TensorData(t);
   memset(data, 0, 8);  // 8-byte offset of first string.
-  TF_StringEncode(str, strlen(str), data + 8, nbytes - 8, status);
+  TF_StringEncode(str, strlen(str), (char*)data + 8, nbytes - 8, status);
   return t;
 }
 
