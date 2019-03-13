@@ -10,6 +10,9 @@
 #include <io.h>
 
 #include <c_api.h>
+#include <cstdio>
+#include <cstdlib>
+
 
 typedef struct model_t {
   TF_Graph* graph;
@@ -34,6 +37,38 @@ int Okay(TF_Status* status);
 TF_Buffer* ReadFile(const char* filename);
 TF_Tensor* ScalarStringTensor(const char* data, TF_Status* status);
 int DirectoryExists(const char* dirname);
+
+
+void DeallocateBuffer(void* data, size_t) {
+	std::free(data);
+}
+
+TF_Buffer* ReadBufferFromFile(const char* file) {
+	const auto f = std::fopen(file, "rb");
+	if (f == nullptr) {
+		return nullptr;
+	}
+
+	std::fseek(f, 0, SEEK_END);
+	const auto fsize = ftell(f);
+	std::fseek(f, 0, SEEK_SET);
+
+	if (fsize < 1) {
+		std::fclose(f);
+		return nullptr;
+	}
+
+	const auto data = std::malloc(fsize);
+	std::fread(data, fsize, 1, f);
+	std::fclose(f);
+
+	TF_Buffer* buf = TF_NewBuffer();
+	buf->data = data;
+	buf->length = fsize;
+	buf->data_deallocator = DeallocateBuffer;
+
+	return buf;
+}
 
 int main(int argc, char** argv) {
   const char* graph_def_filename = "graph.pb";
@@ -88,7 +123,8 @@ int ModelCreate(model_t* model, const char* graph_def_filename) {
 
   {
     // Import the graph.
-    TF_Buffer* graph_def = ReadFile(graph_def_filename);
+    //TF_Buffer* graph_def = ReadFile(graph_def_filename);
+	TF_Buffer* graph_def = ReadBufferFromFile(graph_def_filename);
     if (graph_def == NULL) return 0;
     printf("Read GraphDef of %zu bytes\n", graph_def->length);
     TF_ImportGraphDefOptions* opts = TF_NewImportGraphDefOptions();
