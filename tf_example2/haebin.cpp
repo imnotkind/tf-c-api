@@ -174,7 +174,6 @@ TF_Buffer* ReadFile(const char* filename) {
 		perror("failed to read file: ");
 		return NULL;
 	}
-	cout << stat.st_size << endl;
 	char* data = (char*)malloc(stat.st_size);
 	int nread = _read(fd, data, stat.st_size);
 	if (nread < 0) {
@@ -183,7 +182,7 @@ TF_Buffer* ReadFile(const char* filename) {
 		return NULL;
 	}
 	if (nread != stat.st_size) {
-		fprintf(stderr, "read %zd bytes, expected to read %zd\n", nread,
+		fprintf(stderr, "read %d bytes, expected to read %d\n", nread,
 			stat.st_size);
 		free(data);
 		return NULL;
