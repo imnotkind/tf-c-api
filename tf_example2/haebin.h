@@ -49,7 +49,7 @@ void F_ModelDestroy(model_t* model);
 
 
 
-int Okay(TF_Status* status) {
+inline int Okay(TF_Status* status) {
 	if (TF_GetCode(status) != TF_OK) {
 		cerr << "ERROR: " << TF_Message(status) << endl;
 		return 0;
@@ -57,7 +57,7 @@ int Okay(TF_Status* status) {
 	return 1;
 }
 
-TF_Buffer* ReadFile(const char* filename) {
+inline TF_Buffer* ReadFile(const char* filename) {
 
 	const auto f = std::fopen(filename, "rb");
 	if (f == nullptr) {
@@ -82,7 +82,7 @@ TF_Buffer* ReadFile(const char* filename) {
 	return ret;
 }
 
-TF_Tensor* ScalarStringTensor(const char* str, TF_Status* status) {
+inline TF_Tensor* ScalarStringTensor(const char* str, TF_Status* status) {
 	size_t nbytes = 8 + TF_StringEncodedSize(strlen(str));
 	TF_Tensor* t = TF_AllocateTensor(TF_STRING, NULL, 0, nbytes);
 	void* data = TF_TensorData(t);
@@ -91,7 +91,7 @@ TF_Tensor* ScalarStringTensor(const char* str, TF_Status* status) {
 	return t;
 }
 
-int DirectoryExists(const char* dirname) {
+inline int DirectoryExists(const char* dirname) {
 	/* linux
 	struct stat buf;
 	return stat(dirname, &buf) == 0;
