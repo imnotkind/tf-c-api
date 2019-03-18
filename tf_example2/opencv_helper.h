@@ -1,19 +1,28 @@
 #pragma once
-#include <iostream>
-#include <vector>
+
 #include <opencv2/opencv.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/core/cvdef.h>
-#include <string>
-#include <set>
-#include <windows.h>
 
+#include <iostream>
+#include <vector>
+#include <set>
+#include <string>
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cstddef>
+#include <cstdint>
+#include <Windows.h>
+
+using namespace std;
 using namespace cv;
 
-string type2str(int type) {
+inline string type2str(int type) {
 	string r;
 
 	uchar depth = type & CV_MAT_DEPTH_MASK;
@@ -38,7 +47,7 @@ string type2str(int type) {
 
 
 
-void showimage_fromMat(Mat image)
+inline void showimage_fromMat(Mat image)
 {
 	cout << type2str(image.type()) << endl;
 	cout << image.size() << endl;

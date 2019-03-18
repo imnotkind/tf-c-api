@@ -21,6 +21,9 @@
     <ClCompile Include="linear_example.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="frozen.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="haebin.h">

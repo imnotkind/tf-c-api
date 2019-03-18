@@ -1,7 +1,5 @@
 #include "haebin.h"
 
-
-
 int ModelCreate(model_t* model, const char* graph_def_filename) {
 	model->status = TF_NewStatus();
 	model->graph = TF_NewGraph();

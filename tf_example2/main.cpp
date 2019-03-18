@@ -5,7 +5,7 @@ int linear_model();
 int frozen_model();
 
 int main(int argc, char** argv) {
-	if (linear_model() == 1)
+	if (frozen_model() == 1)
 	{
 		cout << "ERROR" << endl;
 	}
@@ -16,12 +16,41 @@ int frozen_model()
 {
 	const char* graph_def_filename = "mymodel.pb";
 
+	Mat img = imread("images/3DNL_record_count_1601_12_10717.jpg", IMREAD_GRAYSCALE);
+	//showimage_fromMat(img);
+	Mat test_img;
+
+	resize(img, test_img, cv::Size(), 0.5, 0.5);
+	showimage_fromMat(test_img);
+
+	Mat base_img = test_img;
+
+	test_img.convertTo(test_img, CV_32FC1);
+
+	tensor_t<float> i1;
+	i1.dims = { 1, 500, 1024, 1 };
+	if (test_img.isContinuous()) {
+		i1.vals.assign((float*)test_img.datastart, (float*)test_img.dataend);
+	}
+	else {
+		for (int i = 0; i < test_img.rows; ++i) {
+			i1.vals.insert(i1.vals.end(), test_img.ptr<float>(i), test_img.ptr<float>(i) + test_img.cols);
+		}
+	}
+	
+	tensor_t<int> i2;
+	i2.dims = {};
+	i2.vals = { 0 }; //is_training : false
+
+
+
 	model_t model;
 	printf("Loading graph\n");
-	if (!ModelCreate(&model, graph_def_filename)) return 1;
-
+	if (!F_ModelCreate(&model, graph_def_filename)) return 1;
+	printf("Predictions\n");
+	if (!F_ModelPredict(&model, i1, i2, base_img)) return 1;
 	
-
+	ModelDestroy(&model);
 
 	return 0;
 }

@@ -291,11 +291,12 @@ int realmodel()
 	}
 	
 	std::vector<std::int64_t> input_dims2 = { 0 };
-	std::vector < bool > input_vals2 = { false }; //is_training : false
-	
+	std::vector < int > input_vals2 = { 0 }; //is_training : false
+
+
 	TF_Tensor * b = tf_utils::CreateTensor(TF_BOOL,
 		input_dims2.data(), 0, //scalar value
-		&input_vals2[0], input_vals2.size() * sizeof(bool));
+		input_vals2.data(), input_vals2.size() * sizeof(int));
 	if (b == nullptr)
 	{
 		cout << "error2" << endl;

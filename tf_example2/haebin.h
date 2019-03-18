@@ -1,5 +1,10 @@
 #pragma once
+
 #include <iostream>
+#include <vector>
+#include <set>
+#include <string>
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -8,6 +13,8 @@
 #include <Windows.h>
 
 #include <c_api.h>
+#include "opencv_helper.h"
+
 
 using namespace std;
 
@@ -17,10 +24,18 @@ typedef struct model_t {
 	TF_Status* status;
 
 	TF_Output input, target, output;
+	TF_Output input2;
 
 	TF_Operation *init_op, *train_op, *save_op, *restore_op;
 	TF_Output checkpoint_file;
 } model_t;
+
+template <typename T>
+struct tensor_t {
+	std::vector<std::int64_t> dims;
+	std::vector<T> vals;
+	bool is_scalar = false;
+};
 
 enum SaveOrRestore { SAVE, RESTORE };
 
@@ -39,13 +54,12 @@ int ModelCheckpoint(model_t* model, const char* checkpoint_prefix, int type);
 
 
 
-/*
+
 //Frozen inference graph + opencv image as input (mymodel.pb)
 int F_ModelCreate(model_t* model, const char* graph_def_filename);
-int F_ModelInit(model_t* model);
-int F_ModelPredict(model_t* model, float* batch, int batch_size);
+int F_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<int> i2, Mat base_img);
 void F_ModelDestroy(model_t* model);
-*/
+
 
 
 
@@ -73,7 +87,7 @@ inline TF_Buffer* ReadFile(const char* filename) {
 		return nullptr;
 	}
 
-	const auto data = std::malloc(fsize);
+	const auto data = malloc(fsize);
 	std::fread(data, fsize, 1, f);
 	std::fclose(f);
 
