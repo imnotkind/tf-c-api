@@ -65,8 +65,6 @@ int F_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<int> i2, Mat bas
 	TF_DeleteTensor(t2);
 	if (!Okay(model->status)) return 0;
 
-	cout << TF_TensorByteSize(output_values[0]) << endl;
-
 	int64_t expected_bytes = 1 * 500 * 1024 * sizeof(int);
 
 	
@@ -104,7 +102,6 @@ int F_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<int> i2, Mat bas
 
 	pred.convertTo(pred, CV_8UC1);
 
-	//showimage_fromMat(base_img.mul(pred, 0.5));
 	showimage_fromMat(base_img.mul(pred, 0.5));
 
 	cout << "endoffunc" << endl;

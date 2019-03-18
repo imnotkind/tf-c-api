@@ -39,8 +39,8 @@ int frozen_model()
 	}
 	
 	tensor_t<int> i2;
-	i2.dims = {};
-	i2.vals = { 0 }; //is_training : false
+	i2.dims = {}; //scalar value
+	i2.vals = { 1 }; //is_training : false
 
 
 

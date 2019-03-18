@@ -34,7 +34,6 @@ template <typename T>
 struct tensor_t {
 	std::vector<std::int64_t> dims;
 	std::vector<T> vals;
-	bool is_scalar = false;
 };
 
 enum SaveOrRestore { SAVE, RESTORE };
@@ -51,15 +50,13 @@ void NextBatchForTraining(TF_Tensor** inputs_tensor,TF_Tensor** targets_tensor);
 int ModelCheckpoint(model_t* model, const char* checkpoint_prefix, int type);
 
 
-
-
-
-
 //Frozen inference graph + opencv image as input (mymodel.pb)
 int F_ModelCreate(model_t* model, const char* graph_def_filename);
 int F_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<int> i2, Mat base_img);
 void F_ModelDestroy(model_t* model);
 
+
+//FCN training
 
 
 
