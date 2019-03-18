@@ -20,7 +20,7 @@ int ModelCreate(model_t* model, const char* graph_def_filename) {
 		// Import the graph.
 		TF_Buffer* graph_def = ReadFile(graph_def_filename);
 		if (graph_def == NULL) return 0;
-		printf("Read GraphDef of %zu bytes\n", graph_def->length);
+		cout << "Read GraphDef of " << graph_def->length << " bytes" << endl;
 		TF_ImportGraphDefOptions* opts = TF_NewImportGraphDefOptions();
 		TF_GraphImportGraphDef(g, graph_def, opts, model->status);
 		TF_DeleteImportGraphDefOptions(opts);
@@ -105,9 +105,7 @@ int ModelPredict(model_t* model, float* batch, int batch_size) {
 	if (!Okay(model->status)) return 0;
 
 	if (TF_TensorByteSize(output_values[0]) != nbytes) {
-		fprintf(stderr,
-			"ERROR: Expected predictions tensor to have %zu bytes, has %zu\n",
-			nbytes, TF_TensorByteSize(output_values[0]));
+		cerr << "ERROR: Expected predictions tensor to have " << nbytes << " bytes, has " << TF_TensorByteSize(output_values[0]) << endl;
 		TF_DeleteTensor(output_values[0]);
 		return 0;
 	}
@@ -117,7 +115,7 @@ int ModelPredict(model_t* model, float* batch, int batch_size) {
 
 	printf("Predictions:\n");
 	for (int i = 0; i < batch_size; ++i) {
-		printf("\t x = %f, predicted y = %f\n", batch[i], predictions[i]);
+		cout << "    x = " << batch[i] << ", predicted y = " << predictions[i] << endl;
 	}
 	free(predictions);
 	return 1;
@@ -153,55 +151,4 @@ int ModelRunTrainStep(model_t* model) {
 	TF_DeleteTensor(x);
 	TF_DeleteTensor(y);
 	return Okay(model->status);
-}
-
-int Okay(TF_Status* status) {
-	if (TF_GetCode(status) != TF_OK) {
-		fprintf(stderr, "ERROR: %s\n", TF_Message(status));
-		return 0;
-	}
-	return 1;
-}
-
-TF_Buffer* ReadFile(const char* filename) {
-	int fd = _open(filename, _O_BINARY);
-	if (fd < 0) {
-		perror("failed to open file: ");
-		return NULL;
-	}
-	struct stat stat;
-	if (fstat(fd, &stat) != 0) {
-		perror("failed to read file: ");
-		return NULL;
-	}
-	char* data = (char*)malloc(stat.st_size);
-	int nread = _read(fd, data, stat.st_size);
-	if (nread < 0) {
-		perror("failed to read file: ");
-		free(data);
-		return NULL;
-	}
-	if (nread != stat.st_size) {
-		fprintf(stderr, "read %d bytes, expected to read %d\n", nread,
-			stat.st_size);
-		free(data);
-		return NULL;
-	}
-	TF_Buffer* ret = TF_NewBufferFromString(data, stat.st_size);
-	free(data);
-	return ret;
-}
-
-TF_Tensor* ScalarStringTensor(const char* str, TF_Status* status) {
-	size_t nbytes = 8 + TF_StringEncodedSize(strlen(str));
-	TF_Tensor* t = TF_AllocateTensor(TF_STRING, NULL, 0, nbytes);
-	void* data = TF_TensorData(t);
-	memset(data, 0, 8);  // 8-byte offset of first string.
-	TF_StringEncode(str, strlen(str), (char*)data + 8, nbytes - 8, status);
-	return t;
-}
-
-int DirectoryExists(const char* dirname) {
-	struct stat buf;
-	return stat(dirname, &buf) == 0;
 }

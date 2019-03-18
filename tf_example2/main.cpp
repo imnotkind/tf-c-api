@@ -1,18 +1,13 @@
 #include "haebin.h"
-#include <opencv2/opencv.hpp>
-#include <opencv2/core.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/core/cvdef.h>
+#include "opencv_helper.h"
 
 int linear_model();
 int frozen_model();
 
 int main(int argc, char** argv) {
-	if (frozen_model() == 1)
+	if (linear_model() == 1)
 	{
-		cout << "fuck" << endl;
+		cout << "ERROR" << endl;
 	}
 }
 
@@ -24,14 +19,17 @@ int frozen_model()
 	model_t model;
 	printf("Loading graph\n");
 	if (!ModelCreate(&model, graph_def_filename)) return 1;
-	if (!ModelInit(&model)) return 1;
+
+	
+
 
 	return 0;
 }
 
 
+
 int linear_model() {
-	const char* graph_def_filename = "graph.pb";
+	const char* graph_def_filename = "linear_example.pb";
 	const char* checkpoint_prefix = "./checkpoints/checkpoint";
 	int restore = DirectoryExists("checkpoints");
 

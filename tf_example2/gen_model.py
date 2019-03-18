@@ -25,5 +25,5 @@ print('Run this operation to save a checkpoint        : ', saver_def.save_tensor
 print('Run this operation to restore a checkpoint     : ', saver_def.restore_op_name)
 
 # Write the graph out to a file.
-with open('graph.pb', 'wb') as f:
+with open('linear_example.pb', 'wb') as f:
   f.write(tf.get_default_graph().as_graph_def().SerializeToString())
