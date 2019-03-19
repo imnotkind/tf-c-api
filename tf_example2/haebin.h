@@ -56,7 +56,12 @@ int F_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<int> i2, Mat bas
 void F_ModelDestroy(model_t* model);
 
 
-//FCN training
+//FCN train + inference
+int FCN_ModelCreate(model_t* model, const char* graph_def_filename);
+int FCN_ModelInit(model_t* model);
+int FCN_ModelCheckpoint(model_t* model, const char* checkpoint_prefix, int type);
+int FCN_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<float> i2, Mat base_img);
+void FCN_ModelDestroy(model_t* model);
 
 
 

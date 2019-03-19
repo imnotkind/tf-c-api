@@ -22,6 +22,25 @@
 using namespace std;
 using namespace cv;
 
+
+class Pallete {
+
+public:
+	vector<vector<int>> color_pallete;
+
+	Pallete() {
+		color_pallete = {
+			{ 0, 0, 0 },
+			{0, 255, 0},
+			{255, 0, 0},
+			{0, 0, 255},
+			{0, 255, 255},
+			{255, 255, 0},
+		};
+		
+	}
+};
+
 inline string type2str(int type) {
 	string r;
 
@@ -56,7 +75,61 @@ inline void showimage_fromMat(Mat image)
 		cout << "Could not open or find the image" << std::endl;
 		return;
 	}
+	if (image.type() != CV_8UC1 && image.type() != CV_8UC3 && image.type() != CV_8UC4)
+	{
+		cout << "Not an 8bit unsigned channel 1 or 3 or 4 matrix" << std::endl;
+		return;
+	}
 	namedWindow("Display window", WINDOW_AUTOSIZE); // Create a window for display.
 	imshow("Display window", image);                // Show our image inside it.
 	waitKey(0); // Wait for a keystroke in the window
+}
+
+
+//https://stackoverflow.com/questions/35993895/create-a-rgb-image-from-pixel-labels
+inline void show_label_image(Mat pred)
+{
+	if (pred.empty())
+	{
+		cout << "pred Mat empty" << std::endl;
+		return;
+	}
+	if (pred.type() != CV_32SC1)
+	{
+		cout << "Not an 32bit signed channel 1 matrix" << std::endl;
+		return;
+	}
+
+
+
+	Pallete p;
+
+	Mat pred2;
+	pred.convertTo(pred2, CV_8UC1);
+
+
+	cv::Mat draw;
+
+	std::vector<cv::Mat> matChannels;
+	cv::split(pred2, matChannels);
+	matChannels.push_back(pred2);
+	matChannels.push_back(pred2);
+	cv::merge(matChannels, draw);
+
+
+	draw.forEach<Vec3b>
+	(
+		[p](Vec3b &pixel, const int * position) -> void
+		{
+			auto t = p.color_pallete[pixel[0]];
+			pixel[0] = t[0];
+			pixel[1] = t[1];
+			pixel[2] = t[2];
+		}
+	);
+
+
+	showimage_fromMat(draw);
+
+
 }

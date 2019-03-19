@@ -91,7 +91,7 @@ int F_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<int> i2, Mat bas
 		}
 	}
 
-	cout << "pred_labels : [";
+	cout << "pred_labels : [ ";
 	for (auto p : s)
 	{
 		cout << p << " ";
@@ -100,9 +100,11 @@ int F_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<int> i2, Mat bas
 
 	cv::Mat pred(500, 1024, CV_32SC1, data);
 
-	pred.convertTo(pred, CV_8UC1);
+	show_label_image(pred);
 
-	showimage_fromMat(base_img.mul(pred, 0.5));
+
+
+	
 
 	cout << "endoffunc" << endl;
 

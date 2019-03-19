@@ -12,6 +12,16 @@ int main(int argc, char** argv) {
 }
 
 
+int fcn_model()
+{
+	const char* graph_def_filename = "fcn.pb";
+
+	model_t model;
+	printf("Loading graph\n");
+	if (!FCN_ModelCreate(&model, graph_def_filename)) return 1;
+
+}
+
 int frozen_model()
 {
 	const char* graph_def_filename = "mymodel.pb";
@@ -40,7 +50,7 @@ int frozen_model()
 	
 	tensor_t<int> i2;
 	i2.dims = {}; //scalar value
-	i2.vals = { 1 }; //is_training : false
+	i2.vals = { 0 }; //is_training : false
 
 
 

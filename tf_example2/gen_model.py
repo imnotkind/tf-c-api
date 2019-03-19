@@ -9,7 +9,7 @@ y_ = tf.identity(tf.layers.dense(x, 1), name='output')
 
 # Optimize loss
 loss = tf.reduce_mean(tf.square(y_ - y), name='loss')
-optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.01)
+optimizer = tf.train.AdamOptimizer()
 train_op = optimizer.minimize(loss, name='train')
 
 init = tf.global_variables_initializer()
