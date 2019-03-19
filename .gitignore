@@ -4,9 +4,15 @@ Debug/
 Release/
 x64/
 
+
+
 # from root
 /Lib/
 *.dll
 *.lib
+
+## checkpoint
+/tf_example2/logs/
+/tf_example2/checkpoints/
 
 #exception

@@ -44,14 +44,41 @@ int FCN_ModelCreate(model_t* model, const char* graph_def_filename)
 
 	model->checkpoint_file.oper = TF_GraphOperationByName(g, "save_1/Const");
 	model->checkpoint_file.index = 0;
+
+	return 1;
 }
 int FCN_ModelInit(model_t* model)
 {
-	return 0;
+	const TF_Operation* init_op[1] = { model->init_op };
+	TF_SessionRun(model->session, NULL,
+		/* No inputs */
+		NULL, NULL, 0,
+		/* No outputs */
+		NULL, NULL, 0,
+		/* Just the init operation */
+		init_op, 1,
+		/* No metadata */
+		NULL, model->status);
+	return Okay(model->status);
 }
 int FCN_ModelCheckpoint(model_t* model, const char* checkpoint_prefix, int type)
 {
-	return 0;
+	TF_Tensor* t = ScalarStringTensor(checkpoint_prefix, model->status);
+	if (!Okay(model->status)) {
+		TF_DeleteTensor(t);
+		return 0;
+	}
+	TF_Output inputs[1] = { model->checkpoint_file };
+	TF_Tensor* input_values[1] = { t };
+	const TF_Operation* op[1] = { type == SAVE ? model->save_op
+											  : model->restore_op };
+	TF_SessionRun(model->session, NULL, inputs, input_values, 1,
+		/* No outputs */
+		NULL, NULL, 0,
+		/* The operation */
+		op, 1, NULL, model->status);
+	TF_DeleteTensor(t);
+	return Okay(model->status);
 }
 int FCN_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<float> i2, Mat base_img)
 {
@@ -59,5 +86,8 @@ int FCN_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<float> i2, Mat
 }
 void FCN_ModelDestroy(model_t* model)
 {
-
+	TF_DeleteSession(model->session, model->status);
+	Okay(model->status);
+	TF_DeleteGraph(model->graph);
+	TF_DeleteStatus(model->status);
 }

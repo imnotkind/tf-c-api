@@ -3,9 +3,10 @@
 
 int linear_model();
 int frozen_model();
+int fcn_model();
 
 int main(int argc, char** argv) {
-	if (frozen_model() == 1)
+	if (fcn_model() == 1)
 	{
 		cout << "ERROR" << endl;
 	}
@@ -15,11 +16,31 @@ int main(int argc, char** argv) {
 int fcn_model()
 {
 	const char* graph_def_filename = "fcn.pb";
+	const char* checkpoint_prefix = "./logs/model.ckpt-100000";
+	int restore = DirectoryExists("logs");
+	
 
 	model_t model;
 	printf("Loading graph\n");
 	if (!FCN_ModelCreate(&model, graph_def_filename)) return 1;
+	if (restore) {
+		printf(
+			"Restoring weights from checkpoint (remove the checkpoints directory "
+			"to reset)\n");
+		if (!FCN_ModelCheckpoint(&model, checkpoint_prefix, RESTORE)) return 1;
+	}
+	else {
+		printf("Initializing model weights\n");
+		if (!FCN_ModelInit(&model)) return 1;
+	}
 
+
+
+	printf("Initial predictions\n");
+	//if (!ModelPredict(&model, &testdata[0], 3)) return 1;
+
+
+	return 0;
 }
 
 int frozen_model()
