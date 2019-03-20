@@ -52,7 +52,7 @@ int ModelCheckpoint(model_t* model, const char* checkpoint_prefix, int type);
 
 //Frozen inference graph + opencv image as input (mymodel.pb)
 int F_ModelCreate(model_t* model, const char* graph_def_filename);
-int F_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<int> i2, Mat base_img);
+int F_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<int> i2);
 void F_ModelDestroy(model_t* model);
 
 
@@ -60,7 +60,7 @@ void F_ModelDestroy(model_t* model);
 int FCN_ModelCreate(model_t* model, const char* graph_def_filename);
 int FCN_ModelInit(model_t* model);
 int FCN_ModelCheckpoint(model_t* model, const char* checkpoint_prefix, int type);
-int FCN_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<float> i2, Mat base_img);
+int FCN_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<float> i2);
 void FCN_ModelDestroy(model_t* model);
 
 

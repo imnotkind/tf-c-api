@@ -331,3 +331,13 @@ int main()
 
 
 
+
+
+# Tip
+
+- Tensor의 shape과 type을 tensorboard나 python에서 `print(t.shape, t.dtype)` 등으로 확인하자. 가끔씩 `t.dtype`이 그래프에 있는 것과 다르게 출력되는것 같긴 하니(float32 -> float64같이 사소하게) 그래프를 보는게 제일 확실한 듯
+- Graph op 이름도 tensorboard나 python에서 확인
+- DT_BOOL은 int 배열로 먹여줘도 잘 인식된다. 되도록 int로 주자 (vector 관련한 이슈 때문에)
+- DT_FLOAT : float
+- DT_INT32 : int
+- DT_INT64 : int64_t

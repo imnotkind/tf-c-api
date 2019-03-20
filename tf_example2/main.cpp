@@ -34,10 +34,38 @@ int fcn_model()
 		if (!FCN_ModelInit(&model)) return 1;
 	}
 
-
+	
 
 	printf("Initial predictions\n");
-	//if (!ModelPredict(&model, &testdata[0], 3)) return 1;
+
+	Mat img = imread("images/3 Summer Sangria Recipes-screenshot (2).png", IMREAD_COLOR); // BGR
+	//Mat img = imread("images/A Gas Phase Reaction- Producing Ammonium Chloride-screenshot.png", IMREAD_COLOR);
+	//showimage_fromMat(img);
+
+	cvtColor(img, img, COLOR_BGR2RGB);
+	//showimage_fromMat(img);
+
+	img.convertTo(img, CV_32FC3);
+
+	tensor_t<float> i1; //image
+	i1.dims = { 1, img.rows, img.cols, img.channels() };
+	if (img.isContinuous()) {
+		i1.vals.assign((float*)img.datastart, (float*)img.dataend);
+	}
+	else {
+		for (int i = 0; i < img.rows; ++i) {
+			i1.vals.insert(i1.vals.end(), img.ptr<float>(i), img.ptr<float>(i) + img.cols);
+		}
+	}
+
+	tensor_t<float> i2;
+	i2.dims = {}; //scalar value
+	i2.vals = { 1.0 }; //keep_prob : 1.0
+
+
+	if (!FCN_ModelPredict(&model, i1, i2)) return 1;
+
+
 
 
 	return 0;
@@ -47,39 +75,35 @@ int frozen_model()
 {
 	const char* graph_def_filename = "mymodel.pb";
 
-	Mat img = imread("images/3DNL_record_count_1601_12_10717.jpg", IMREAD_GRAYSCALE);
-	//showimage_fromMat(img);
-	Mat test_img;
-
-	resize(img, test_img, cv::Size(), 0.5, 0.5);
-	showimage_fromMat(test_img);
-
-	Mat base_img = test_img;
-
-	test_img.convertTo(test_img, CV_32FC1);
-
-	tensor_t<float> i1;
-	i1.dims = { 1, 500, 1024, 1 };
-	if (test_img.isContinuous()) {
-		i1.vals.assign((float*)test_img.datastart, (float*)test_img.dataend);
-	}
-	else {
-		for (int i = 0; i < test_img.rows; ++i) {
-			i1.vals.insert(i1.vals.end(), test_img.ptr<float>(i), test_img.ptr<float>(i) + test_img.cols);
-		}
-	}
-	
-	tensor_t<int> i2;
-	i2.dims = {}; //scalar value
-	i2.vals = { 0 }; //is_training : false
-
-
-
 	model_t model;
 	printf("Loading graph\n");
 	if (!F_ModelCreate(&model, graph_def_filename)) return 1;
 	printf("Predictions\n");
-	if (!F_ModelPredict(&model, i1, i2, base_img)) return 1;
+
+	Mat img = imread("images/3DNL_record_count_1601_12_10717.jpg", IMREAD_GRAYSCALE);
+	//showimage_fromMat(img);
+
+	resize(img, img, cv::Size(), 0.5, 0.5);
+	showimage_fromMat(img);
+
+	img.convertTo(img, CV_32FC1);
+
+	tensor_t<float> i1; //image
+	i1.dims = { 1, 500, 1024, 1 };
+	if (img.isContinuous()) {
+		i1.vals.assign((float*)img.datastart, (float*)img.dataend);
+	}
+	else {
+		for (int i = 0; i < img.rows; ++i) {
+			i1.vals.insert(i1.vals.end(), img.ptr<float>(i), img.ptr<float>(i) + img.cols);
+		}
+	}
+
+	tensor_t<int> i2;
+	i2.dims = {}; //scalar value
+	i2.vals = { 0 }; //is_training : false
+
+	if (!F_ModelPredict(&model, i1, i2)) return 1;
 	
 	ModelDestroy(&model);
 

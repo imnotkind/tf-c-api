@@ -28,18 +28,18 @@ int F_ModelCreate(model_t* model, const char* graph_def_filename)
 	}
 
 	// Handles to the interesting operations in the graph.
-	model->input.oper = TF_GraphOperationByName(g, "input/Placeholder");
+	model->input.oper = TF_GraphOperationByName(g, "input/Placeholder"); //DT_FLOAT
 	model->input.index = 0;
-	model->input2.oper = TF_GraphOperationByName(g, "input/Placeholder_2");
+	model->input2.oper = TF_GraphOperationByName(g, "input/Placeholder_2"); //DT_BOOL
 	model->input2.index = 0;
-	model->output.oper = TF_GraphOperationByName(g, "output/ArgMax");
+	model->output.oper = TF_GraphOperationByName(g, "output/ArgMax"); //output_type : DT_INT32
 	model->output.index = 0;
 
 	
 	return 1;
 }
 
-int F_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<int> i2, Mat base_img)
+int F_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<int> i2)
 {
 	TF_Tensor* t1 = TF_AllocateTensor(TF_FLOAT, i1.dims.data(), i1.dims.size(), i1.vals.size() * sizeof(float));
 	memcpy(TF_TensorData(t1), i1.vals.data(), i1.vals.size() * sizeof(float));
@@ -66,7 +66,7 @@ int F_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<int> i2, Mat bas
 	if (!Okay(model->status)) return 0;
 
 	int64_t expected_bytes = 1 * 500 * 1024 * sizeof(int);
-
+	
 	
 	if (TF_TensorByteSize(output_values[0]) != expected_bytes) {
 		cerr << "ERROR: Expected predictions tensor to have " << expected_bytes << " bytes, has " << TF_TensorByteSize(output_values[0]) << endl;
