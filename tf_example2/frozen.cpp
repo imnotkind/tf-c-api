@@ -104,12 +104,6 @@ int F_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<int> i2)
 
 
 
-	
-
-	cout << "endoffunc" << endl;
-
-
-
 	TF_DeleteTensor(output_values[0]);
 
 

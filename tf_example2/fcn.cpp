@@ -32,7 +32,7 @@ int FCN_ModelCreate(model_t* model, const char* graph_def_filename)
 	model->input.index = 0;
 	model->input2.oper = TF_GraphOperationByName(g, "keep_probabilty"); //DT_FLOAT // scalar
 	model->input2.index = 0;
-	model->target.oper = TF_GraphOperationByName(g, "GTLabel"); //DT_INT32
+	model->target.oper = TF_GraphOperationByName(g, "GTLabel"); //DT_INT32 // (a,b,c,1)
 	model->target.index = 0;
 	model->output.oper = TF_GraphOperationByName(g, "Pred"); //DT_INT64 // (a,b,c)
 	model->output.index = 0;
@@ -88,7 +88,7 @@ int FCN_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<float> i2)
 	memcpy(TF_TensorData(t1), i1.vals.data(), i1.vals.size() * sizeof(float));
 
 	TF_Tensor* t2 = TF_AllocateTensor(TF_FLOAT, i2.dims.data(), i2.dims.size(), i2.vals.size() * sizeof(float));
-	memcpy(TF_TensorData(t2), i2.vals.data(), i2.vals.size() * sizeof(int));
+	memcpy(TF_TensorData(t2), i2.vals.data(), i2.vals.size() * sizeof(float));
 
 	TF_Output inputs[2] = { model->input, model->input2 };
 	TF_Tensor* input_values[2] = { t1, t2 };
@@ -151,14 +151,48 @@ int FCN_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<float> i2)
 
 
 
-	cout << "endoffunc" << endl;
-
-
-
 	TF_DeleteTensor(output_values[0]);
 
 	return 1;
 }
+
+
+
+int FCN_ModelRunTrainStep(model_t* model, tensor_t<float> i1, tensor_t<float> i2, tensor_t<int> i3) {
+
+	TF_Tensor* t1 = TF_AllocateTensor(TF_FLOAT, i1.dims.data(), i1.dims.size(), i1.vals.size() * sizeof(float));
+	memcpy(TF_TensorData(t1), i1.vals.data(), i1.vals.size() * sizeof(float));
+
+	TF_Tensor* t2 = TF_AllocateTensor(TF_FLOAT, i2.dims.data(), i2.dims.size(), i2.vals.size() * sizeof(float));
+	memcpy(TF_TensorData(t2), i2.vals.data(), i2.vals.size() * sizeof(float));
+
+	TF_Tensor* t3 = TF_AllocateTensor(TF_INT32, i3.dims.data(), i3.dims.size(), i3.vals.size() * sizeof(int));
+	memcpy(TF_TensorData(t3), i3.vals.data(), i3.vals.size() * sizeof(int));
+
+
+
+	
+	TF_Output inputs[3] = { model->input, model->input2, model->target };
+	TF_Tensor* input_values[3] = { t1, t2, t3 };
+	const TF_Operation* train_op[1] = { model->train_op };
+
+
+	TF_SessionRun(model->session,
+		NULL, // Run options.
+		inputs, input_values, 3, // Input tensors, input tensor values, number of inputs.
+		NULL, NULL, 0, // Output tensors, output tensor values, number of outputs.
+		train_op, 1, // Target operations, number of targets.
+		NULL, // Run metadata.
+		model->status // Output status.
+	);
+
+
+	TF_DeleteTensor(t1);
+	TF_DeleteTensor(t2);
+	TF_DeleteTensor(t3);
+	return Okay(model->status);
+}
+
 void FCN_ModelDestroy(model_t* model)
 {
 	TF_DeleteSession(model->session, model->status);

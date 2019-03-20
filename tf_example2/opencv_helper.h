@@ -29,13 +29,12 @@ public:
 	vector<vector<int>> color_pallete;
 
 	Pallete() {
+		//opencv : BGR!!!
 		color_pallete = {
 			{ 0, 0, 0 },
-			{0, 255, 0},
-			{255, 0, 0},
 			{0, 0, 255},
-			{0, 255, 255},
-			{255, 255, 0},
+			{255, 0, 0},
+			{0, 255, 0},
 		};
 		
 	}
@@ -87,16 +86,16 @@ inline void showimage_fromMat(Mat image)
 
 
 //https://stackoverflow.com/questions/35993895/create-a-rgb-image-from-pixel-labels
-inline void show_label_image(Mat pred)
+inline void show_label_image(Mat label)
 {
-	if (pred.empty())
+	if (label.empty())
 	{
 		cout << "pred Mat empty" << std::endl;
 		return;
 	}
-	if (pred.type() != CV_32SC1)
+	if (label.type() != CV_32SC1 && label.type() != CV_8UC1)
 	{
-		cout << "Not an 32bit signed channel 1 matrix" << std::endl;
+		cout << "Not an 32bit signed or 8bit unsigned channel 1 matrix : " <<type2str(label.type()) << std::endl;
 		return;
 	}
 
@@ -105,7 +104,11 @@ inline void show_label_image(Mat pred)
 	Pallete p;
 
 	Mat pred2;
-	pred.convertTo(pred2, CV_8UC1);
+
+	if (label.type() == CV_32SC1)
+		label.convertTo(pred2, CV_8UC1);
+	else
+		pred2 = label;
 
 
 	cv::Mat draw;
@@ -121,7 +124,15 @@ inline void show_label_image(Mat pred)
 	(
 		[p](Vec3b &pixel, const int * position) -> void
 		{
-			auto t = p.color_pallete[pixel[0]];
+			vector<int> t;
+			if (p.color_pallete.size() > pixel[0])
+				t = p.color_pallete[pixel[0]];
+			else
+			{
+				cout << "out of pallete range" << endl;
+				t = p.color_pallete[0];
+			}
+				
 			pixel[0] = t[0];
 			pixel[1] = t[1];
 			pixel[2] = t[2];
