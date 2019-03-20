@@ -4,6 +4,7 @@
 #include <vector>
 #include <set>
 #include <string>
+#include <filesystem>
 
 #include <cstdio>
 #include <cstdlib>
@@ -11,6 +12,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <Windows.h>
+
 
 #include <c_api.h>
 #include "opencv_helper.h"
@@ -62,7 +64,8 @@ int FCN_ModelInit(model_t* model);
 int FCN_ModelCheckpoint(model_t* model, const char* checkpoint_prefix, int type);
 int FCN_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<float> i2);
 void FCN_ModelDestroy(model_t* model);
-int FCN_ModelRunTrainStep(model_t* model, tensor_t<float> i1, tensor_t<float> i2, tensor_t<int> i3);
+int FCN_ModelRunTrainStep_POC(model_t* model, tensor_t<float> i1, tensor_t<float> i2, tensor_t<int> i3);
+int FCN_ModelRunTrainStep(model_t* model);
 
 
 
@@ -117,4 +120,24 @@ inline int DirectoryExists(const char* dirname) {
 
 	return (dwAttrib != INVALID_FILE_ATTRIBUTES &&
 		(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+inline vector<string> get_all_files_names_within_folder(const char* folder)
+{
+	string fol(folder);
+	vector<string> names;
+	string search_path = fol + "/*.*";
+	WIN32_FIND_DATA fd;
+	HANDLE hFind = ::FindFirstFile(search_path.c_str(), &fd);
+	if (hFind != INVALID_HANDLE_VALUE) {
+		do {
+			// read all (real) files in current folder
+			// , delete '!' read other 2 default folder . and ..
+			if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+				names.push_back(fd.cFileName);
+			}
+		} while (::FindNextFile(hFind, &fd));
+		::FindClose(hFind);
+	}
+	return names;
 }

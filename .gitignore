@@ -13,6 +13,8 @@ x64/
 
 ## checkpoint
 /tf_example2/logs/
+/tf_example2/logs_poc/
 /tf_example2/checkpoints/
+/tf_example2/Materials_In_Vessels
 
 #exception
