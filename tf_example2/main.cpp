@@ -62,9 +62,15 @@ int fcn_model()
 	if (!FCN_ModelPredict(&model, i1, i2)) return 1;
 
 	cout << "Training for a few steps" << endl;
-	for (int i = 0; i < 100; ++i) {
+	for (int i = 0; i < 50000; ++i) {
 		cout << "iteration " << i << endl;
 		if (!FCN_ModelRunTrainStep(&model)) return 1;
+
+		if (i % 100 == 0)
+		{
+			cout << "Saving checkpoint" << endl;
+			if (!FCN_ModelCheckpoint(&model, checkpoint_prefix, SAVE)) return 1;
+		}
 	}
 
 	cout << "Updated predictions" << endl;
@@ -149,7 +155,7 @@ int fcn_model_POC()
 	}
 
 	cout << "Training for a few steps" << endl;
-	for (int i = 0; i < 10; ++i) {
+	for (int i = 0; i < 5; ++i) {
 		cout << "iteration " << i << endl;
 		if (!FCN_ModelRunTrainStep_POC(&model, i1, i2, i3)) return 1;
 	}

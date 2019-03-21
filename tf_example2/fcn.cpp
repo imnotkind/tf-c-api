@@ -166,7 +166,7 @@ int FCN_ModelRunTrainStep(model_t* model)
 	auto k = get_all_files_names_within_folder(train_img_dir.c_str());
 	for (auto fname : k)
 	{
-		cout << fname;
+		//cout << fname;
 
 		Mat img = imread(train_img_dir + fname, IMREAD_COLOR); // BGR
 		cvtColor(img, img, COLOR_BGR2RGB);
@@ -191,7 +191,7 @@ int FCN_ModelRunTrainStep(model_t* model)
 
 		if (label.empty())
 		{
-			cout << " : PASS" << endl;
+			//cout << " : PASS" << endl;
 			continue;
 		}
 
@@ -237,7 +237,7 @@ int FCN_ModelRunTrainStep(model_t* model)
 		TF_DeleteTensor(t2);
 		TF_DeleteTensor(t3);
 
-		cout << endl;
+		//cout << endl;
 
 		if (!Okay(model->status))
 			return 0;
