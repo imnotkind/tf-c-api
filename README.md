@@ -113,39 +113,142 @@ bazel, msys2, Visual C++ Build Tools 2015(내 경우는 VS2017에서 추가 옵�
 
 
 
-# C inference
+# Using C Api
 
 앞서 말한 lib, dll, header를 추가해서 써주면 된다.
 
 
 
-tensorflow c api 는 사용법이 까다롭고, 할 수 있는 것도 적고, documentation이 존재하지 않아, 나 역시도 완벽하게 숙지하지는 못했다. (c_api.h를 직접 읽어야 한다.)
+C Api를 이용하기 위해서는 graph definition을 protobuf(.pb) 형식으로 빼내야 한다. 또 필요한 operation이 있으면 operation의 이름, operation에 필요한 input 또는 output tensor의 shape과 type을 알고 있어야 한다.
 
-하지만 다행히도 인터넷에 inference의 예시로 https://github.com/Neargye/hello_tf_c_api/blob/master/src/session_run.cpp 가 있으니 참고하면서 하도록 하자.
+이런 식의 예시로 말이다.
+
+```python
+import tensorflow as tf
+
+# Batch of input and target output (1x1 matrices)
+x = tf.placeholder(tf.float32, shape=[None, 1, 1], name='input')
+y = tf.placeholder(tf.float32, shape=[None, 1, 1], name='target')
+
+# Trivial linear model
+y_ = tf.identity(tf.layers.dense(x, 1), name='output')
+
+# Optimize loss
+loss = tf.reduce_mean(tf.square(y_ - y), name='loss')
+optimizer = tf.train.AdamOptimizer()
+train_op = optimizer.minimize(loss, name='train')
+
+init = tf.global_variables_initializer()
+
+# tf.train.Saver.__init__ adds operations to the graph to save
+# and restore variables.
+saver_def = tf.train.Saver().as_saver_def()
+
+print('Run this operation to initialize variables     : ', init.name)
+print('Run this operation for a train step            : ', train_op.name)
+print('Feed this tensor to set the checkpoint filename: ', saver_def.filename_tensor_name)
+print('Run this operation to save a checkpoint        : ', saver_def.save_tensor_name)
+print('Run this operation to restore a checkpoint     : ', saver_def.restore_op_name)
+
+# Write the graph out to a file.
+with open('graph.pb', 'wb') as f:
+  f.write(tf.get_default_graph().as_graph_def().SerializeToString())
+```
+
+또 checkpoint 파일로 weight를 복구해주고 싶다면, checkpoint 파일도 필요하다. (.index, .data~)
+
+필요한 operation의 이름들은 보통 input, output, train, initializer, checkpoint save, checkpoint restore, checkpoint filename set 하는 operation이다.
 
 
 
-다음은 제가 opencv를 이용해 이미지를 대상으로 inference를 돌린 코드입니다.
+그래서 결국 알아낸 operation의 이름들로 C api에서 operation들을 찾고, TF_SessionRun으로 실행하면 된다.
+
+Tensor는 연속된 메모리와 dimension을 명시해주면 만들어낼 수 있다.
+
+
+
+다음은 제가 구현해낸 예시입니다. 그대로 쓰시면 됩니다.
+
+`fcn_model()`은 
+
+- `logs`라는 디렉토리가 있으면 거기에서 restore를 한 후, prediction을 보여준 후 training을 일정량 한 후 다시 개선된 prediction을 보여줍니다.
+- `logs`라는 디렉토리가 없으면 weight initialization을 한 후, prediction을 보여준 후 training을 일정량 한 후 다시 개선된 prediction을 보여줍니다.
+
+
+
+
+
+### opencv_helper.h
 
 ```c++
-#include "tf_utils.hpp"
-#include <iostream>
-#include <vector>
+#pragma once
+
 #include <opencv2/opencv.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/core/cvdef.h>
-#include <string>
+
+#include <iostream>
+#include <vector>
 #include <set>
-#include <windows.h>
+#include <string>
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cstddef>
+#include <cstdint>
+#include <Windows.h>
 
 using namespace std;
-
 using namespace cv;
 
-void showimage_fromMat(Mat image)
+
+class Pallete {
+
+public:
+	vector<vector<int>> color_pallete;
+
+	Pallete() {
+		//opencv : BGR!!!
+		color_pallete = {
+			{ 0, 0, 0 },
+			{0, 0, 255},
+			{255, 0, 0},
+			{0, 255, 0},
+		};
+		
+	}
+};
+
+inline string type2str(int type) {
+	string r;
+
+	uchar depth = type & CV_MAT_DEPTH_MASK;
+	uchar chans = 1 + (type >> CV_CN_SHIFT);
+
+	switch (depth) {
+	case CV_8U:  r = "8U"; break;
+	case CV_8S:  r = "8S"; break;
+	case CV_16U: r = "16U"; break;
+	case CV_16S: r = "16S"; break;
+	case CV_32S: r = "32S"; break;
+	case CV_32F: r = "32F"; break;
+	case CV_64F: r = "64F"; break;
+	default:     r = "User"; break;
+	}
+
+	r += "C";
+	r += (chans + '0');
+
+	return r;
+}
+
+
+
+inline void showimage_fromMat(Mat image)
 {
 	cout << type2str(image.type()) << endl;
 	cout << image.size() << endl;
@@ -154,179 +257,569 @@ void showimage_fromMat(Mat image)
 		cout << "Could not open or find the image" << std::endl;
 		return;
 	}
+	if (image.type() != CV_8UC1 && image.type() != CV_8UC3 && image.type() != CV_8UC4)
+	{
+		cout << "Not an 8bit unsigned channel 1 or 3 or 4 matrix" << std::endl;
+		return;
+	}
 	namedWindow("Display window", WINDOW_AUTOSIZE); // Create a window for display.
 	imshow("Display window", image);                // Show our image inside it.
 	waitKey(0); // Wait for a keystroke in the window
 }
 
 
-int main()
+//https://stackoverflow.com/questions/35993895/create-a-rgb-image-from-pixel-labels
+inline void show_label_image(Mat label)
 {
-	TF_Graph* graph = tf_utils::LoadGraphDef("mymodel.pb");
-	if (graph == nullptr) {
-		std::cout << "Can't load graph" << std::endl;
-		return 1;
+	if (label.empty())
+	{
+		cout << "pred Mat empty" << std::endl;
+		return;
+	}
+	if (label.type() != CV_32SC1 && label.type() != CV_8UC1)
+	{
+		cout << "Not an 32bit signed or 8bit unsigned channel 1 matrix : " <<type2str(label.type()) << std::endl;
+		return;
 	}
 
-	std::vector<TF_Output> input_op;
-
-	input_op.push_back({ TF_GraphOperationByName(graph, "input/Placeholder"), 0 });
-	if (input_op[0].oper == nullptr) {
-		std::cout << "Can't init input_op" << std::endl;
-		return 2;
-	}	
-	
-	Mat img = imread("images/3DNL_record_count_1601_12_10717.jpg", IMREAD_GRAYSCALE);
-	//showimage_fromMat(img);
-	
-
-	Mat test_img;
-
-	resize(img, test_img, cv::Size(), 0.5, 0.5);
-	showimage_fromMat(test_img);
-
-	Mat base_img = test_img;
-
-	test_img.convertTo(test_img, CV_32FC1);
 
 
-	std::vector<std::int64_t> input_dims = { 1, 500, 1024, 1 };
-	std::vector<float> input_vals;
-	if (test_img.isContinuous()) {
-		input_vals.assign((float*)test_img.datastart, (float*)test_img.dataend);
-	}
-	else {
-		for (int i = 0; i < test_img.rows; ++i) {
-			input_vals.insert(input_vals.end(), test_img.ptr<float>(i), test_img.ptr<float>(i) + test_img.cols);
+	Pallete p;
+
+	Mat pred2;
+
+	if (label.type() == CV_32SC1)
+		label.convertTo(pred2, CV_8UC1);
+	else
+		pred2 = label;
+
+
+	cv::Mat draw;
+
+	std::vector<cv::Mat> matChannels;
+	cv::split(pred2, matChannels);
+	matChannels.push_back(pred2);
+	matChannels.push_back(pred2);
+	cv::merge(matChannels, draw);
+
+
+	draw.forEach<Vec3b>
+	(
+		[p](Vec3b &pixel, const int * position) -> void
+		{
+			vector<int> t;
+			if (p.color_pallete.size() > pixel[0])
+				t = p.color_pallete[pixel[0]];
+			else
+			{
+				cout << "out of pallete range" << endl;
+				t = p.color_pallete[0];
+			}
+				
+			pixel[0] = t[0];
+			pixel[1] = t[1];
+			pixel[2] = t[2];
 		}
+	);
+
+
+	showimage_fromMat(draw);
+
+
+}
+```
+
+
+
+
+
+### haebin.h
+
+```c++
+#pragma once
+
+#include <iostream>
+#include <vector>
+#include <set>
+#include <string>
+#include <filesystem>
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cstddef>
+#include <cstdint>
+#include <Windows.h>
+
+
+#include <c_api.h>
+#include "opencv_helper.h"
+
+
+using namespace std;
+
+typedef struct model_t {
+	TF_Graph* graph;
+	TF_Session* session;
+	TF_Status* status;
+
+	TF_Output input, target, output;
+	TF_Output input2;
+
+	TF_Operation *init_op, *train_op, *save_op, *restore_op;
+	TF_Output checkpoint_file;
+} model_t;
+
+template <typename T>
+struct tensor_t {
+	std::vector<std::int64_t> dims;
+	std::vector<T> vals;
+};
+
+enum SaveOrRestore { SAVE, RESTORE };
+
+
+
+//FCN train + inference
+int FCN_ModelCreate(model_t* model, const char* graph_def_filename);
+int FCN_ModelInit(model_t* model);
+int FCN_ModelCheckpoint(model_t* model, const char* checkpoint_prefix, int type);
+int FCN_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<float> i2);
+void FCN_ModelDestroy(model_t* model);
+int FCN_ModelRunTrainStep(model_t* model);
+
+
+
+inline int Okay(TF_Status* status) {
+	if (TF_GetCode(status) != TF_OK) {
+		cerr << "ERROR: " << TF_Message(status) << endl;
+		return 0;
+	}
+	return 1;
+}
+
+inline TF_Buffer* ReadFile(const char* filename) {
+
+	const auto f = std::fopen(filename, "rb");
+	if (f == nullptr) {
+		return nullptr;
 	}
 
+	std::fseek(f, 0, SEEK_END);
+	const auto fsize = ftell(f);
+	std::fseek(f, 0, SEEK_SET);
+
+	if (fsize < 1) {
+		std::fclose(f);
+		return nullptr;
+	}
+
+	const auto data = malloc(fsize);
+	std::fread(data, fsize, 1, f);
+	std::fclose(f);
+
+	TF_Buffer* ret = TF_NewBufferFromString(data, fsize);
+	free(data);
+	return ret;
+}
+
+inline TF_Tensor* ScalarStringTensor(const char* str, TF_Status* status) {
+	size_t nbytes = 8 + TF_StringEncodedSize(strlen(str));
+	TF_Tensor* t = TF_AllocateTensor(TF_STRING, NULL, 0, nbytes);
+	void* data = TF_TensorData(t);
+	memset(data, 0, 8);  // 8-byte offset of first string.
+	TF_StringEncode(str, strlen(str), (char*)data + 8, nbytes - 8, status);
+	return t;
+}
+
+inline int DirectoryExists(const char* dirname) {
+	/* linux
+	struct stat buf;
+	return stat(dirname, &buf) == 0;
+	*/
+	DWORD dwAttrib = GetFileAttributesA(dirname);
+
+	return (dwAttrib != INVALID_FILE_ATTRIBUTES &&
+		(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+inline vector<string> get_all_files_names_within_folder(const char* folder)
+{
+	string fol(folder);
+	vector<string> names;
+	string search_path = fol + "/*.*";
+	WIN32_FIND_DATA fd;
+	HANDLE hFind = ::FindFirstFile(search_path.c_str(), &fd);
+	if (hFind != INVALID_HANDLE_VALUE) {
+		do {
+			// read all (real) files in current folder
+			// , delete '!' read other 2 default folder . and ..
+			if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+				names.push_back(fd.cFileName);
+			}
+		} while (::FindNextFile(hFind, &fd));
+		::FindClose(hFind);
+	}
+	return names;
+}
+```
 
 
-	std::vector<TF_Tensor*> input_tensor;
 
-	TF_Tensor * a = tf_utils::CreateTensor(TF_FLOAT,
-		input_dims.data(), input_dims.size(),
-		input_vals.data(), input_vals.size() * sizeof(float));
-	if (a == nullptr)
+### fcn.cpp
+
+```c++
+#include "haebin.h"
+
+int FCN_ModelCreate(model_t* model, const char* graph_def_filename)
+{
+	model->status = TF_NewStatus();
+	model->graph = TF_NewGraph();
+
 	{
-		cout << "error1" << endl;
-		return 1;
+		// Create the session.
+		TF_SessionOptions* opts = TF_NewSessionOptions();
+		model->session = TF_NewSession(model->graph, opts, model->status);
+		TF_DeleteSessionOptions(opts);
+		if (!Okay(model->status)) return 0;
 	}
-	input_tensor.push_back(a);
 
-	
-	input_op.push_back({ TF_GraphOperationByName(graph, "input/Placeholder_2"), 0 });
-	if (input_op[1].oper == nullptr) {
-		std::cout << "Can't init input_op" << std::endl;
-		return 2;
-	}
-	
-	std::vector<std::int64_t> input_dims2 = { 0 };
-	std::vector < bool > input_vals2 = { false }; //is_training : false
-	
-	TF_Tensor * b = tf_utils::CreateTensor(TF_BOOL,
-		input_dims2.data(), 0, //scalar value
-		&input_vals2[0], input_vals2.size() * sizeof(bool));
-	if (b == nullptr)
+	TF_Graph* g = model->graph;
+
 	{
-		cout << "error2" << endl;
-		return 1;
-	}
-	input_tensor.push_back(b);
-	
-	
-	TF_Output out_op = { TF_GraphOperationByName(graph, "output/ArgMax"), 0 };
-	if (out_op.oper == nullptr) {
-		std::cout << "Can't init out_op" << std::endl;
-		return 3;
-	}
-	TF_Tensor* output_tensor = nullptr;
-
-	TF_Status* status = TF_NewStatus();
-	TF_SessionOptions* options = TF_NewSessionOptions();
-	TF_Session* sess = TF_NewSession(graph, options, status);
-	TF_DeleteSessionOptions(options);
-
-	if (TF_GetCode(status) != TF_OK) {
-		TF_DeleteStatus(status);
-		return 4;
+		// Import the graph.
+		TF_Buffer* graph_def = ReadFile(graph_def_filename);
+		if (graph_def == NULL) return 0;
+		cout << "Read GraphDef of " << graph_def->length << " bytes" << endl;
+		TF_ImportGraphDefOptions* opts = TF_NewImportGraphDefOptions();
+		TF_GraphImportGraphDef(g, graph_def, opts, model->status);
+		TF_DeleteImportGraphDefOptions(opts);
+		TF_DeleteBuffer(graph_def);
+		if (!Okay(model->status)) return 0;
 	}
 
+	// Handles to the interesting operations in the graph.
+	model->input.oper = TF_GraphOperationByName(g, "input_image"); //DT_FLOAT // (a,b,c,3) : RGB (not BGR)
+	model->input.index = 0;
+	model->input2.oper = TF_GraphOperationByName(g, "keep_probabilty"); //DT_FLOAT // scalar
+	model->input2.index = 0;
+	model->target.oper = TF_GraphOperationByName(g, "GTLabel"); //DT_INT32 // (a,b,c,1)
+	model->target.index = 0;
+	model->output.oper = TF_GraphOperationByName(g, "Pred"); //DT_INT64 // (a,b,c)
+	model->output.index = 0;
 
-	int64 starttime = getTickCount();
-	//for (int i = 0; i < 1000; i++)
-	{
-		TF_SessionRun(sess,
-			nullptr, // Run options.
-			&input_op[0], &input_tensor[0], 2, // Input tensors, input tensor values, number of inputs.
-			&out_op, &output_tensor, 1, // Output tensors, output tensor values, number of outputs.
-			nullptr, 0, // Target operations, number of targets.
-			nullptr, // Run metadata.
-			status // Output status.
-		);
+	model->init_op = TF_GraphOperationByName(g, "init_1");
+	model->train_op = TF_GraphOperationByName(g, "Adam");
+	model->save_op = TF_GraphOperationByName(g, "save_1/control_dependency");
+	model->restore_op = TF_GraphOperationByName(g, "save_1/restore_all");
+
+	model->checkpoint_file.oper = TF_GraphOperationByName(g, "save_1/Const");
+	model->checkpoint_file.index = 0;
+
+	return 1;
+}
+int FCN_ModelInit(model_t* model)
+{
+	const TF_Operation* init_op[1] = { model->init_op };
+	TF_SessionRun(model->session, NULL,
+		/* No inputs */
+		NULL, NULL, 0,
+		/* No outputs */
+		NULL, NULL, 0,
+		/* Just the init operation */
+		init_op, 1,
+		/* No metadata */
+		NULL, model->status);
+	return Okay(model->status);
+}
+int FCN_ModelCheckpoint(model_t* model, const char* checkpoint_prefix, int type)
+{
+	TF_Tensor* t = ScalarStringTensor(checkpoint_prefix, model->status);
+	if (!Okay(model->status)) {
+		TF_DeleteTensor(t);
+		return 0;
 	}
-	int64 endtime = getTickCount();
-	cout << "DEEP TIME : " << ((double)endtime - starttime) / getTickFrequency() << endl;
+	TF_Output inputs[1] = { model->checkpoint_file };
+	TF_Tensor* input_values[1] = { t };
+	const TF_Operation* op[1] = { type == SAVE ? model->save_op
+											  : model->restore_op };
+	TF_SessionRun(model->session, NULL, inputs, input_values, 1,
+		/* No outputs */
+		NULL, NULL, 0,
+		/* The operation */
+		op, 1, NULL, model->status);
+	TF_DeleteTensor(t);
+	return Okay(model->status);
+}
 
-	if (TF_GetCode(status) != TF_OK) {
-		std::cout << "Error run session" << endl;
-		cout << "Error code " << TF_GetCode(status) << TF_Message(status) << endl;
-		TF_DeleteStatus(status);
-		return 5;
+
+int FCN_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<float> i2)
+{
+	TF_Tensor* t1 = TF_AllocateTensor(TF_FLOAT, i1.dims.data(), i1.dims.size(), i1.vals.size() * sizeof(float));
+	memcpy(TF_TensorData(t1), i1.vals.data(), i1.vals.size() * sizeof(float));
+
+	TF_Tensor* t2 = TF_AllocateTensor(TF_FLOAT, i2.dims.data(), i2.dims.size(), i2.vals.size() * sizeof(float));
+	memcpy(TF_TensorData(t2), i2.vals.data(), i2.vals.size() * sizeof(float));
+
+	TF_Output inputs[2] = { model->input, model->input2 };
+	TF_Tensor* input_values[2] = { t1, t2 };
+	TF_Output outputs[1] = { model->output };
+	TF_Tensor* output_values[1] = { NULL };
+
+
+	TF_SessionRun(model->session,
+		NULL, // Run options.
+		inputs, input_values, 2, // Input tensors, input tensor values, number of inputs.
+		outputs, output_values, 1, // Output tensors, output tensor values, number of outputs.
+		nullptr, 0, // Target operations, number of targets.
+		nullptr, // Run metadata.
+		model->status // Output status.
+	);
+	TF_DeleteTensor(t1);
+	TF_DeleteTensor(t2);
+	if (!Okay(model->status)) return 0;
+
+	int64_t expected_bytes = i1.dims[0] * i1.dims[1] * i1.dims[2] * sizeof(int64_t); //output : DT_INT64  
+
+
+	if (TF_TensorByteSize(output_values[0]) != expected_bytes) {
+		cerr << "ERROR: Expected predictions tensor to have " << expected_bytes << " bytes, has " << TF_TensorByteSize(output_values[0]) << endl;
+		TF_DeleteTensor(output_values[0]);
+		return 0;
 	}
 
-	TF_CloseSession(sess, status);
-	if (TF_GetCode(status) != TF_OK) {
-		std::cout << "Error close session";
-		TF_DeleteStatus(status);
-		return 6;
-	}
 
-	TF_DeleteSession(sess, status);
-	if (TF_GetCode(status) != TF_OK) {
-		std::cout << "Error delete session";
-		TF_DeleteStatus(status);
-		return 7;
-	}
-
-	cout << "End of inference" << endl;
-
-	const auto data = static_cast<int*>(TF_TensorData(output_tensor));
-
+	const auto data = static_cast<int64_t*>(TF_TensorData(output_values[0]));
+	auto data2 = new int[i1.dims[0] * i1.dims[1] * i1.dims[2]];
 	set<int> s;
 
-	for (int i = 0; i < 1; i++)
+	for (int i = 0; i < i1.dims[0]; i++)
 	{
-		for (int j = 0; j < 500; j++)
+		for (int j = 0; j < i1.dims[1]; j++)
 		{
-			for (int k = 0; k < 1024; k++)
+			for (int k = 0; k < i1.dims[2]; k++)
 			{
-				int z = static_cast<int>(data[j * 1024 + k]);
+				int z = static_cast<int>(data[i * i1.dims[1] * i1.dims[2] + j * i1.dims[2] + k]);
+				data2[i * i1.dims[1] * i1.dims[2] + j * i1.dims[2] + k] = z;
 				s.insert(z);
 			}
 		}
 	}
 
-	cout << "pred_labels : [";
+	cout << "pred_labels : [ ";
 	for (auto p : s)
 	{
 		cout << p << " ";
 	}
 	cout << "]" << endl;
 
-	cv::Mat pred(500, 1024, CV_32SC1, data);
+	cv::Mat pred(i1.dims[1], i1.dims[2], CV_32SC1, data2);
 	
-	pred.convertTo(pred, CV_8UC1);
 
-	//showimage_fromMat(base_img.mul(pred, 0.5));
-	showimage_fromMat(base_img.mul(pred, 0.5));
+	show_label_image(pred);
 
-	cout << "endoffunc" << endl;
+	delete[] data2;
 
+
+
+	TF_DeleteTensor(output_values[0]);
+
+	return 1;
+}
+
+int FCN_ModelRunTrainStep(model_t* model)
+{
+	string test_label_dir = "Materials_In_Vessels/LiquidSolidLabels/";
+	string train_img_dir = "Materials_In_Vessels/Train_Images/";
+
+	
+
+	auto k = get_all_files_names_within_folder(train_img_dir.c_str());
+	for (auto fname : k)
+	{
+		//cout << fname;
+
+		Mat img = imread(train_img_dir + fname, IMREAD_COLOR); // BGR
+		cvtColor(img, img, COLOR_BGR2RGB);
+		img.convertTo(img, CV_32FC3);
+
+		tensor_t<float> i1; //image
+		i1.dims = { 1, img.rows, img.cols, img.channels() };
+		if (img.isContinuous()) {
+			i1.vals.assign((float*)img.datastart, (float*)img.dataend);
+		}
+		else {
+			for (int i = 0; i < img.rows; ++i) {
+				i1.vals.insert(i1.vals.end(), img.ptr<float>(i), img.ptr<float>(i) + img.cols);
+			}
+		}
+
+		tensor_t<float> i2; //keep_prob
+		i2.dims = {}; //scalar value
+		i2.vals = { 1.0 }; //keep_prob : 1.0
+
+		Mat label = imread(test_label_dir + fname, IMREAD_GRAYSCALE);
+
+		if (label.empty())
+		{
+			//cout << " : PASS" << endl;
+			continue;
+		}
+
+		label.convertTo(label, CV_32SC1);
+
+		tensor_t<int> i3; //GT_Label
+		i3.dims = { 1, label.rows, label.cols, label.channels() };
+		if (label.isContinuous()) {
+			i3.vals.assign((int*)label.datastart, (int*)label.dataend);
+		}
+		else {
+			for (int i = 0; i < label.rows; ++i) {
+				i3.vals.insert(i3.vals.end(), label.ptr<int>(i), label.ptr<int>(i) + label.cols);
+			}
+		}
+
+		TF_Tensor* t1 = TF_AllocateTensor(TF_FLOAT, i1.dims.data(), i1.dims.size(), i1.vals.size() * sizeof(float));
+		memcpy(TF_TensorData(t1), i1.vals.data(), i1.vals.size() * sizeof(float));
+
+		TF_Tensor* t2 = TF_AllocateTensor(TF_FLOAT, i2.dims.data(), i2.dims.size(), i2.vals.size() * sizeof(float));
+		memcpy(TF_TensorData(t2), i2.vals.data(), i2.vals.size() * sizeof(float));
+
+		TF_Tensor* t3 = TF_AllocateTensor(TF_INT32, i3.dims.data(), i3.dims.size(), i3.vals.size() * sizeof(int));
+		memcpy(TF_TensorData(t3), i3.vals.data(), i3.vals.size() * sizeof(int));
+
+
+		TF_Output inputs[3] = { model->input, model->input2, model->target };
+		TF_Tensor* input_values[3] = { t1, t2, t3 };
+		const TF_Operation* train_op[1] = { model->train_op };
+
+
+		TF_SessionRun(model->session,
+			NULL, // Run options.
+			inputs, input_values, 3, // Input tensors, input tensor values, number of inputs.
+			NULL, NULL, 0, // Output tensors, output tensor values, number of outputs.
+			train_op, 1, // Target operations, number of targets.
+			NULL, // Run metadata.
+			model->status // Output status.
+		);
+
+
+		TF_DeleteTensor(t1);
+		TF_DeleteTensor(t2);
+		TF_DeleteTensor(t3);
+
+		//cout << endl;
+
+		if (!Okay(model->status))
+			return 0;
+	}
+
+
+	return Okay(model->status);
+}
+
+
+void FCN_ModelDestroy(model_t* model)
+{
+	TF_DeleteSession(model->session, model->status);
+	Okay(model->status);
+	TF_DeleteGraph(model->graph);
+	TF_DeleteStatus(model->status);
 }
 ```
 
+
+
+### main.cpp
+
+```c++
+#include "haebin.h"
+#include "opencv_helper.h"
+
+
+int fcn_model();
+
+int main(int argc, char** argv) {
+	if (fcn_model_POC() == 1)
+	{
+		cout << "ERROR" << endl;
+	}
+}
+
+
+int fcn_model()
+{
+	const char* graph_def_filename = "fcn.pb";
+	const char* checkpoint_prefix = "./logs/model.ckpt-haebin";
+	int restore = DirectoryExists("logs");
+	
+
+	model_t model;
+	cout << "Loading graph" << endl;
+	if (!FCN_ModelCreate(&model, graph_def_filename)) return 1;
+	if (restore) {
+		cout << "Restoring weights from checkpoint (remove the checkpoints directory to reset)" << endl;
+		if (!FCN_ModelCheckpoint(&model, checkpoint_prefix, RESTORE)) return 1;
+	}
+	else {
+		cout << "Initializing model weights" << endl;
+		if (!FCN_ModelInit(&model)) return 1;
+	}
+
+	cout << "Initial predictions" << endl;
+
+	Mat img = imread("images/acl2.jpg", IMREAD_COLOR); // BGR
+	//showimage_fromMat(img);
+
+	cvtColor(img, img, COLOR_BGR2RGB);
+	//showimage_fromMat(img);
+
+	img.convertTo(img, CV_32FC3);
+
+	tensor_t<float> i1; //image
+	i1.dims = { 1, img.rows, img.cols, img.channels() };
+	if (img.isContinuous()) {
+		i1.vals.assign((float*)img.datastart, (float*)img.dataend);
+	}
+	else {
+		for (int i = 0; i < img.rows; ++i) {
+			i1.vals.insert(i1.vals.end(), img.ptr<float>(i), img.ptr<float>(i) + img.cols);
+		}
+	}
+
+	tensor_t<float> i2; //keep_prob
+	i2.dims = {}; //scalar value
+	i2.vals = { 1.0 }; //keep_prob : 1.0
+
+
+	if (!FCN_ModelPredict(&model, i1, i2)) return 1;
+
+	cout << "Training for a few steps" << endl;
+	for (int i = 0; i < 50000; ++i) {
+		cout << "iteration " << i << endl;
+		if (!FCN_ModelRunTrainStep(&model)) return 1;
+
+		if (i % 100 == 0)
+		{
+			cout << "Saving checkpoint" << endl;
+			if (!FCN_ModelCheckpoint(&model, checkpoint_prefix, SAVE)) return 1;
+		}
+	}
+
+	cout << "Updated predictions" << endl;
+	if (!FCN_ModelPredict(&model, i1, i2)) return 1;
+
+
+	cout << "Saving checkpoint" << endl;
+	if (!FCN_ModelCheckpoint(&model, checkpoint_prefix, SAVE)) return 1;
+
+
+
+	return 0;
+
+}
+
+```
 
 
 
@@ -336,7 +829,7 @@ int main()
 # Tip
 
 - Tensor의 shape과 type을 tensorboard나 python에서 `print(t.shape, t.dtype)` 등으로 확인하자. 가끔씩 `t.dtype`이 그래프에 있는 것과 다르게 출력되는것 같긴 하니(float32 -> float64같이 사소하게) 그래프를 보는게 제일 확실한 듯
-- Graph op 이름도 tensorboard나 python에서 확인
+- Graph op 이름도 tensorboard나 python에서 확인해서 적용
 - DT_BOOL은 int 배열로 먹여줘도 잘 인식된다. 되도록 int로 주자 (vector 관련한 이슈 때문에)
 - DT_FLOAT : float
 - DT_INT32 : int
