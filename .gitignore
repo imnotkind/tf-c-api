@@ -16,5 +16,6 @@ x64/
 /tf_example2/logs_poc/
 /tf_example2/checkpoints/
 /tf_example2/Materials_In_Vessels
+/tools/tensorboard_log/
 
 #exception

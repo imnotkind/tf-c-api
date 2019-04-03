@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
 
 int fcn_model()
 {
-	const char* graph_def_filename = "fcn.pb";
+	const char* graph_def_filename = "models/fcn.pb";
 	const char* checkpoint_prefix = "./logs/model.ckpt-haebin";
 	int restore = DirectoryExists("logs");
 	
@@ -88,7 +88,7 @@ int fcn_model()
 
 int fcn_model_POC()
 {
-	const char* graph_def_filename = "fcn.pb";
+	const char* graph_def_filename = "models/fcn.pb";
 	const char* checkpoint_prefix_load = "./logs_poc/model.ckpt-100000";
 	const char* checkpoint_prefix_save = "./logs_poc/model.ckpt-100001";
 	int restore = DirectoryExists("logs_poc");
@@ -173,7 +173,7 @@ int fcn_model_POC()
 
 int frozen_model()
 {
-	const char* graph_def_filename = "mymodel.pb";
+	const char* graph_def_filename = "models/mymodel.pb";
 
 	model_t model;
 	cout << "Loading graph" << endl;
@@ -213,7 +213,7 @@ int frozen_model()
 
 
 int linear_model() {
-	const char* graph_def_filename = "linear_example.pb";
+	const char* graph_def_filename = "models/linear_example.pb";
 	const char* checkpoint_prefix = "./checkpoints/checkpoint";
 	int restore = DirectoryExists("checkpoints");
 

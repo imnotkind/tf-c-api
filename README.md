@@ -826,7 +826,7 @@ int fcn_model()
 
 
 
-# Tip
+# C api Tip
 
 - Tensor의 shape과 type을 tensorboard나 python에서 `print(t.shape, t.dtype)` 등으로 확인하자. 가끔씩 `t.dtype`이 그래프에 있는 것과 다르게 출력되는것 같긴 하니(float32 -> float64같이 사소하게) 그래프를 보는게 제일 확실한 듯
 - Graph op 이름도 tensorboard나 python에서 확인해서 적용
@@ -834,3 +834,81 @@ int fcn_model()
 - DT_FLOAT : float
 - DT_INT32 : int
 - DT_INT64 : int64_t
+
+
+
+
+
+# C++ build from source
+
+`bazel build //tensorflow:libtensorflow_cc.so`
+
+
+
+
+
+# TF Lite
+
+<https://stackoverflow.com/questions/50632152/tensorflow-convert-pb-file-to-tflite-using-python>
+
+
+
+# Python TF graph -> pb file
+
+**this is not freezing**
+
+```python
+init = tf.global_variables_initializer()
+saver_def = tf.train.Saver().as_saver_def()
+    
+print('Run this operation to initialize variables     : ', init.name)
+print('Run this operation for a train step            : ', train_op.name)
+print('Feed this tensor to set the checkpoint filename: ', saver_def.filename_tensor_name)
+print('Run this operation to save a checkpoint        : ', saver_def.save_tensor_name)
+print('Run this operation to restore a checkpoint     : ', saver_def.restore_op_name)
+    
+with open('fcn.pb', 'wb') as f:
+    f.write(tf.get_default_graph().as_graph_def().SerializeToString())
+```
+
+
+
+# pb file + checkpoint -> frozen pb file
+
+```bash
+freeze_graph --input_graph=/tmp/mobilenet_v1_224.pb \
+  --input_checkpoint=/tmp/checkpoints/mobilenet-10202.ckpt \
+  --input_binary=true \
+  --output_graph=/tmp/frozen_mobilenet_v1_224.pb \
+  --output_node_names=MobileNetV1/Predictions/Reshape_1
+```
+
+
+
+# frozen pb file -> tflite file
+
+```bash
+tflite_convert \
+  --output_file=/tmp/mobilenet_v1_1.0_224.tflite \
+  --graph_def_file=/tmp/mobilenet_v1_0.50_128/frozen_graph.pb \
+  --input_arrays=input \
+  --output_arrays=MobilenetV1/Predictions/Reshape_1
+```
+
+```python
+import tensorflow as tf
+
+graph_def_file = "model/mymodel.pb"
+input_arrays = ["input/Placeholder", "input/Placeholder_2"]
+output_arrays = ["output/ArgMax"]
+
+converter = tf.lite.TFLiteConverter.from_frozen_graph(
+  graph_def_file, input_arrays, output_arrays)
+tflite_model = converter.convert()
+
+open("model/mymodel.tflite", "wb").write(tflite_model)
+```
+
+
+
+`import/`와 `:0`는 빼도 된다
