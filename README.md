@@ -841,15 +841,46 @@ int fcn_model()
 
 # C++ build from source
 
-`bazel build //tensorflow:libtensorflow_cc.so`
+`bazel build --config opt //tensorflow:libtensorflow_cc.so`
+
+bazel은 포기, cmake로 하자 (C처럼 라이브러리에 필요한 패키지를 모아놓은 게 없는듯)
+
+<https://joe-antognini.github.io/machine-learning/build-windows-tf>
+
+<https://joe-antognini.github.io/machine-learning/windows-tf-project>
 
 
 
+cmake generate 때 version_info.cc 찾아야 한다면서 안 되면 패치 필요 : <https://github.com/tensorflow/tensorflow/pull/24314>
 
+
+
+```
+cmake .. -A x64 -DCMAKE_BUILD_TYPE=Release `
+ -DSWIG_EXECUTABLE=D:\MyUsers\Haebin\program\swigwin-3.0.12\swig.exe `
+ -DPYTHON_EXECUTABLE=D:\MyUsers\Haebin\program\Python37\python.exe `
+ -DPYTHON_LIBRARIES=D:\MyUsers\Haebin\program\Python37\libs\python37.lib
+```
+
+tensorflow.sln 열어서 Release로 빌드
+
+<https://github.com/tensorflow/tensorflow/issues/24885>
+
+<https://github.com/guikarist/tensorflow-windows-build-script>
+
+<https://github.com/tensorflow/tensorflow/pull/26152>
 
 # TF Lite
 
 <https://stackoverflow.com/questions/50632152/tensorflow-convert-pb-file-to-tflite-using-python>
+
+<https://www.tensorflow.org/lite/guide/get_started>
+
+
+
+TF_BOOL 지원 안 함 : <https://github.com/tensorflow/tensorflow/issues/20741>
+
+
 
 
 
