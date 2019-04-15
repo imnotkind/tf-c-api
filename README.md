@@ -841,34 +841,79 @@ int fcn_model()
 
 # C++ build from source
 
-`bazel build --config opt //tensorflow:libtensorflow_cc.so`
+tensorflow가 windows에서 c++ api 지원을 아직 잘 안 해서 어느 정도의 hack이 필요하다.
 
-bazel은 포기, cmake로 하자 (C처럼 라이브러리에 필요한 패키지를 모아놓은 게 없는듯)
+아직 시작 단계  : <https://github.com/tensorflow/tensorflow/pull/26152>
 
-<https://joe-antognini.github.io/machine-learning/build-windows-tf>
+cuda 7.0~8.0을 쓰던 과거 버전에서는 Cmake를 지원했지만, 현재 버전에서는 Cmake 지원이 끊겨 안 되고, bazel을 이용한 컴파일을 지원한다.
 
-<https://joe-antognini.github.io/machine-learning/windows-tf-project>
+심지어 tensorflow가 공식으로 지원하는 C++ api는 tensorflow project를 전부 compile하면서 tensorflow 내부에 내 프로젝트를 넣어 tensorflow의 방대한 코드를 전부 컴파일해야하는 단점이 있어 배포용으로는 부적합하다.
 
+다행히 어느 정도의 hack을 통해 shared library를 만드는 방법을 알아냈으니 그것을 쓰면 될 것 같다.
 
+이 repo를 따른다 : https://github.com/guikarist/tensorflow-windows-build-script
 
-cmake generate 때 version_info.cc 찾아야 한다면서 안 되면 패치 필요 : <https://github.com/tensorflow/tensorflow/pull/24314>
+이 repo에서는 tensorflow에서 지원하는 bazel build에다 추가로 윈도우에서 shared library의 형태로 쓰기 위한 패치 작업을 모아놓은 repo이다.
 
+이 repo의 내용대로 컴파일을 했으면 해야 할 일은 bazel build의 결과에서 적절한 파일들을 include해주는 것인데, 아직까지 충분히 symbol을 다 모아놓은 static lib가 없는 상태라서 내가 필요한 symbol을 파악하고 다시 라이브러리를 빌드해야한다. (이게 무슨 소리인지는 추후에 설명)
 
+빌드가 끝나면 c api처럼 
+
+`bazel-bin/tensorflow/libtensorflow_cc.so -> tensorflow_cc.dll `
+
+`bazel-bin/tensorflow/liblibtensorflow_cc.so.ifso -> tensorflow_cc.lib`
+
+로 추가해준다.
+
+##### include
 
 ```
-cmake .. -A x64 -DCMAKE_BUILD_TYPE=Release `
- -DSWIG_EXECUTABLE=D:\MyUsers\Haebin\program\swigwin-3.0.12\swig.exe `
- -DPYTHON_EXECUTABLE=D:\MyUsers\Haebin\program\Python37\python.exe `
- -DPYTHON_LIBRARIES=D:\MyUsers\Haebin\program\Python37\libs\python37.lib
+source\bazel-source\external\protobuf_archive\src
+source\bazel-source\external\com_google_absl
+source\bazel-source\external\eigen_archive\
+source\
 ```
 
-tensorflow.sln 열어서 Release로 빌드
+```
+mkdir $TensorFlowBinDir\tensorflow\lib\ -ErrorAction SilentlyContinue
+Copy-Item  $TensorFlowSourceDir\bazel-bin\tensorflow\libtensorflow_cc.so $TensorFlowBinDir\tensorflow\lib\tensorflow_cc.dll -Force
+Copy-Item  $TensorFlowSourceDir\bazel-bin\tensorflow\libtensorflow_cc.so.if.lib $TensorFlowBinDir\tensorflow\lib\tensorflow_cc.lib -Force
 
-<https://github.com/tensorflow/tensorflow/issues/24885>
+Copy-Item $TensorFlowSourceDir\tensorflow\core $TensorFlowBinDir\tensorflow\include\tensorflow\core -Recurse -Container  -Filter "*.h" -Force
+Copy-Item $TensorFlowSourceDir\tensorflow\cc $TensorFlowBinDir\tensorflow\include\tensorflow\cc -Recurse -Container -Filter "*.h" -Force
 
-<https://github.com/guikarist/tensorflow-windows-build-script>
+Copy-Item $TensorFlowSourceDir\bazel-genfiles\tensorflow\core\ $TensorFlowBinDir\tensorflow\include_pb\tensorflow\core -Recurse -Container -Filter "*.h" -Force
+Copy-Item $TensorFlowSourceDir\bazel-genfiles\tensorflow\cc $TensorFlowBinDir\tensorflow\include_pb\tensorflow\cc -Recurse -Container -Filter "*.h" -Force
 
-<https://github.com/tensorflow/tensorflow/pull/26152>
+# Absl includes.
+Copy-Item $TensorFlowSourceDir\bazel-source\external\com_google_absl\absl $TensorFlowBinDir\absl\include\absl\ -Recurse -Container -Filter "*.h" -Force
+
+# Eigen includes
+Copy-Item $TensorFlowSourceDir\bazel-source\external\eigen_archive\ $TensorFlowBinDir\Eigen\eigen_archive -Recurse -Force
+Copy-Item $TensorFlowSourceDir\third_party\eigen3 $TensorFlowBinDir\Eigen\include\third_party\eigen3\ -Recurse -Force
+```
+
+```
+D:\MyUsers\Haebin\repo\tf-c-api\Lib\tensorflow-1.13.1_cc\include
+D:\MyUsers\Haebin\repo\tf-c-api\Lib\tensorflow-1.13.1_cc\include_pb
+D:\MyUsers\Haebin\repo\tf-c-api\Lib\tensorflow-1.13.1_cc\Eigen\include
+D:\MyUsers\Haebin\repo\tf-c-api\Lib\tensorflow-1.13.1_cc\absl\include
+D:\MyUsers\Haebin\repo\tf-c-api\Lib\tensorflow-1.13.1_cc\Eigen\eigen_archive
+D:\MyUsers\Haebin\repo\tf-c-api\Lib\tensorflow-1.13.1_cc\proto
+```
+
+<https://github.com/node-tensorflow/node-tensorflow/blob/master/tools/install.sh>
+
+##### preprocessor definition
+
+```
+COMPILER_MSVC
+NOMINMAX
+```
+
+
+
+
 
 # TF Lite
 
