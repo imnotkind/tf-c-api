@@ -7,7 +7,7 @@ int fcn_model();
 int fcn_model_POC();
 
 int main(int argc, char** argv) {
-	if (fcn_model() == 1)
+	if (linear_model() == 1)
 	{
 		cout << "ERROR" << endl;
 	}

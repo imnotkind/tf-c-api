@@ -855,6 +855,8 @@ cuda 7.0~8.0을 쓰던 과거 버전에서는 Cmake를 지원했지만, 현재 �
 
 이 repo에서는 tensorflow에서 지원하는 bazel build에다 추가로 윈도우에서 shared library의 형태로 쓰기 위한 패치 작업을 모아놓은 repo이다.
 
+
+
 이 repo의 내용대로 컴파일을 했으면 해야 할 일은 bazel build의 결과에서 적절한 파일들을 include해주는 것인데, 아직까지 충분히 symbol을 다 모아놓은 static lib가 없는 상태라서 내가 필요한 symbol을 파악하고 다시 라이브러리를 빌드해야한다. (이게 무슨 소리인지는 추후에 설명)
 
 빌드가 끝나면 c api처럼 
