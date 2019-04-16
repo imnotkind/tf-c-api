@@ -28,7 +28,7 @@ typedef std::vector<std::pair<std::string, tensorflow::Tensor>> tensor_dict;
  * optional)
  * @return status of reloading
  */
-tensorflow::Status LoadModel(tensorflow::Session *sess, std::string graph_fn,
+tensorflow::Status LoadModelMETA(tensorflow::Session *sess, std::string graph_fn,
 	std::string checkpoint_fn = "") {
 	tensorflow::Status status;
 
