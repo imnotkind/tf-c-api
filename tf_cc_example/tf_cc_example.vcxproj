@@ -73,7 +73,7 @@
     <IncludePath>D:\MyUsers\Haebin\repo\tf-c-api\Lib\tensorflow-1.13.1_cc\include;D:\MyUsers\Haebin\repo\tf-c-api\Lib\tensorflow-1.13.1_cc\include_pb;D:\MyUsers\Haebin\repo\tf-c-api\Lib\tensorflow-1.13.1_cc\Eigen\include;D:\MyUsers\Haebin\repo\tf-c-api\Lib\tensorflow-1.13.1_cc\absl\include;D:\MyUsers\Haebin\repo\tf-c-api\Lib\tensorflow-1.13.1_cc\Eigen\eigen_archive;D:\MyUsers\Haebin\repo\tf-c-api\Lib\tensorflow-1.13.1_cc\proto;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>D:\MyUsers\Haebin\repo\tf-c-api\Lib\tensorflow-1.13.1_cc\include;D:\MyUsers\Haebin\repo\tf-c-api\Lib\tensorflow-1.13.1_cc\include_pb;D:\MyUsers\Haebin\repo\tf-c-api\Lib\tensorflow-1.13.1_cc\Eigen\include;D:\MyUsers\Haebin\repo\tf-c-api\Lib\tensorflow-1.13.1_cc\absl\include;D:\MyUsers\Haebin\repo\tf-c-api\Lib\tensorflow-1.13.1_cc\Eigen\eigen_archive;D:\MyUsers\Haebin\repo\tf-c-api\Lib\tensorflow-1.13.1_cc\proto;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Lib\tensorflow-1.13.1_cc\include;$(SolutionDir)Lib\tensorflow-1.13.1_cc\include_pb;$(SolutionDir)Lib\tensorflow-1.13.1_cc\Eigen\include;$(SolutionDir)Lib\tensorflow-1.13.1_cc\absl\include;$(SolutionDir)Lib\tensorflow-1.13.1_cc\Eigen\eigen_archive;$(SolutionDir)Lib\tensorflow-1.13.1_cc\proto;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
