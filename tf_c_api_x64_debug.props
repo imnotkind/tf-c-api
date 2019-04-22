@@ -3,9 +3,9 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <LocalDebuggerEnvironment>PATH=$(SolutionDir)Lib\tensorflow-1.13.1;$(SolutionDir)Lib\opencv-4.0.1\build\x64\vc15\bin;%PATH%$(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
-    <IncludePath>$(SolutionDir)Lib\opencv-4.0.1\build\include;$(SolutionDir)Lib\tensorflow-1.13.1;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)Lib\opencv-4.0.1\build\x64\vc15\lib;$(SolutionDir)Lib\tensorflow-1.13.1;$(LibraryPath)</LibraryPath>
+    <LocalDebuggerEnvironment>PATH=$(SolutionDir)Lib\tensorflow-1.13.1_c;$(SolutionDir)Lib\opencv-4.0.1\build\x64\vc15\bin;%PATH%$(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
+    <IncludePath>$(SolutionDir)Lib\opencv-4.0.1\build\include;$(SolutionDir)Lib\tensorflow-1.13.1_c;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)Lib\opencv-4.0.1\build\x64\vc15\lib;$(SolutionDir)Lib\tensorflow-1.13.1_c;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <Link>

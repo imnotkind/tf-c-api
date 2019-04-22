@@ -9,7 +9,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
-
+/*
 #include <cstdio>
 #include <functional>
 #include <string>
@@ -231,3 +231,4 @@ int example_trainer(int argc, char* argv[]) {
 	tensorflow::port::InitMain(argv[0], &argc, &argv);
 	tensorflow::example::ConcurrentSessions(opts);
 }
+*/
