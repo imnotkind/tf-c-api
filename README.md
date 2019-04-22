@@ -941,7 +941,7 @@ tf lite용 C++ library는 아주 최신 버전에서만 겨우 지원하는 상�
 
 # Python TF graph -> pb file
 
-**this is not freezing**
+**this is not freezing, so we can use this pb for training!**
 
 ```python
 init = tf.global_variables_initializer()

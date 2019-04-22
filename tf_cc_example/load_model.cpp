@@ -28,7 +28,7 @@ typedef std::vector<std::pair<std::string, tensorflow::Tensor>> tensor_dict;
  * optional)
  * @return status of reloading
  */
-tensorflow::Status LoadModelMETA(tensorflow::Session *sess, std::string graph_fn,
+tensorflow::Status LoadModel_META(tensorflow::Session *sess, std::string graph_fn,
 	std::string checkpoint_fn = "") {
 	tensorflow::Status status;
 
@@ -67,7 +67,7 @@ tensorflow::Status LoadModelMETA(tensorflow::Session *sess, std::string graph_fn
 	return tensorflow::Status::OK();
 }
 
-tensorflow::Status LoadModelPB(tensorflow::Session *sess, std::string graph_fn,
+tensorflow::Status LoadModel_PB(tensorflow::Session *sess, std::string graph_fn,
 	std::string checkpoint_fn = "") {
 	tensorflow::Status status;
 
@@ -114,7 +114,7 @@ int linear_example() {
 	tensorflow::Session *sess;
 	tensorflow::SessionOptions options;
 	TF_CHECK_OK(tensorflow::NewSession(options, &sess));
-	TF_CHECK_OK(LoadModelPB(sess, graph_fn, checkpoint_fn));
+	TF_CHECK_OK(LoadModel_PB(sess, graph_fn, checkpoint_fn));
 
 	// prepare inputs
 	tensorflow::TensorShape data_shape({ 3, 1, 1 });
