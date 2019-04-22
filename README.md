@@ -929,6 +929,14 @@ TF_BOOL 지원 안 함 : <https://github.com/tensorflow/tensorflow/issues/20741>
 
 
 
+tf lite용 C++ library는 아주 최신 버전에서만 겨우 지원하는 상황 (물론 이마저도 windows 지원은 안 함): 
+
+<https://github.com/tensorflow/tensorflow/issues/20905>
+
+<https://github.com/tensorflow/tensorflow/commit/030088358322c883086817a732f1cbe9dd84bb49#diff-866c5e896c5bfd544d4e642ed2e3d2bd>
+
+
+
 
 
 # Python TF graph -> pb file

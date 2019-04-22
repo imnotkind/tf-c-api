@@ -12,10 +12,10 @@ x64/
 *.lib
 
 ## checkpoint
-/tf_example2/logs/
-/tf_example2/logs_poc/
-/tf_example2/checkpoints/
-/tf_example2/Materials_In_Vessels
+/tf_c_example/logs/
+/tf_c_example/logs_poc/
+/tf_c_example/checkpoints/
+/tf_c_example/Materials_In_Vessels
 /tools/tensorboard_log/
 /tools/model/fcn-ckpt/
 frozen_fcn.pb

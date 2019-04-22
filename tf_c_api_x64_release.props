@@ -10,6 +10,7 @@
   <ItemDefinitionGroup>
     <Link>
       <AdditionalDependencies>tensorflow.lib;opencv_world401.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Console</SubSystem>
     </Link>
     <ClCompile>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>

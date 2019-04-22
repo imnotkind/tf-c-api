@@ -105,7 +105,7 @@ tensorflow::Status LoadModelPB(tensorflow::Session *sess, std::string graph_fn,
 	return tensorflow::Status::OK();
 }
 
-int main(int argc, char const *argv[]) {
+int linear_example() {
 	const std::string graph_fn = "models/linear_example.pb";
 	const std::string checkpoint_fn = "./checkpoints/checkpoint";
 	//const std::string checkpoint_fn = "";
