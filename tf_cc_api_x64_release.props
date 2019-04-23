@@ -4,7 +4,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <LocalDebuggerEnvironment>PATH=$(SolutionDir)Lib\opencv-4.0.1\build\x64\vc15\bin;$(SolutionDir)Lib\tensorflow-1.13.1_cc;%PATH%$(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
-    <IncludePath>$(SolutionDir)Lib\opencv-4.0.1\build\include;$(SolutionDir)Lib\tensorflow-1.13.1_cc\include;$(SolutionDir)Lib\tensorflow-1.13.1_cc\include_pb;$(SolutionDir)Lib\tensorflow-1.13.1_cc\Eigen\include;$(SolutionDir)Lib\tensorflow-1.13.1_cc\absl\include;$(SolutionDir)Lib\tensorflow-1.13.1_cc\Eigen\eigen_archive;$(SolutionDir)Lib\tensorflow-1.13.1_cc\proto;$(SolutionDir)Lib\tensorflow-1.13.1_cc\flat;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Lib\opencv-4.0.1\build\include;$(SolutionDir)Lib\tensorflow-1.13.1_cc\include;$(SolutionDir)Lib\tensorflow-1.13.1_cc\include_pb;$(SolutionDir)Lib\tensorflow-1.13.1_cc\include_eigen;$(SolutionDir)Lib\tensorflow-1.13.1_cc\include_absl;$(SolutionDir)Lib\tensorflow-1.13.1_cc\include_eigen_archive;$(SolutionDir)Lib\tensorflow-1.13.1_cc\include_proto;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)Lib\opencv-4.0.1\build\x64\vc15\lib;$(SolutionDir)Lib\tensorflow-1.13.1_cc;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup>
