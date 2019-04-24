@@ -20,14 +20,14 @@ Copy-Item $tfSourceDir\bazel-genfiles\tensorflow\core $tfLibDir\include_pb\tenso
 Copy-Item $tfSourceDir\bazel-genfiles\tensorflow\cc $tfLibDir\include_pb\tensorflow\cc -Recurse -Filter "*.h"
 
 # Protobuf includes.
-Copy-Item $tfSourceDir\bazel-source\external\protobuf_archive\src $tfLibDir\include_proto -Recurse -Filter "*.h" 
+Copy-Item $tfSourceDir\bazel-source\external\protobuf_archive\src\google $tfLibDir\include_proto\google -Recurse -Filter "*.h" 
 
 # Absl includes.
 Copy-Item $tfSourceDir\bazel-source\external\com_google_absl\absl $tfLibDir\include_absl\absl -Recurse -Filter "*.h" 
 
 # Eigen includes
-Copy-Item $tfSourceDir\bazel-source\external\eigen_archive\ $tfLibDir\include_eigen_archive -Recurse -Filter "*.h" 
-Copy-Item $tfSourceDir\third_party\eigen3 $tfLibDir\include_eigen\third_party\eigen3\ -Recurse -Filter "*.h"
+Copy-Item $tfSourceDir\bazel-source\external\eigen_archive\ $tfLibDir\include_eigen_archive -Recurse
+Copy-Item $tfSourceDir\third_party\eigen3 $tfLibDir\include_eigen\third_party\eigen3\ -Recurse
 
 #flatbuffer include
-Copy-Item $tfSourceDir\bazel-source\external\flatbuffers\include $tfLibDir\include_flat -Recurse -Filter "*.h"
+#Copy-Item $tfSourceDir\bazel-source\external\flatbuffers\include $tfLibDir\include_flat -Recurse -Filter "*.h"
