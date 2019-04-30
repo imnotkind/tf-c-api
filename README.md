@@ -869,42 +869,40 @@ cuda 7.0~8.0을 쓰던 과거 버전에서는 Cmake를 지원했지만, 현재 �
 
 ##### include
 
-```
-source\bazel-source\external\protobuf_archive\src
-source\bazel-source\external\com_google_absl
-source\bazel-source\external\eigen_archive\
-source\
-```
+따로 include해야할 라이브러리들을 추출해주는 스크립트를 만들어보았다.
 
-```
-mkdir $TensorFlowBinDir\tensorflow\lib\ -ErrorAction SilentlyContinue
-Copy-Item  $TensorFlowSourceDir\bazel-bin\tensorflow\libtensorflow_cc.so $TensorFlowBinDir\tensorflow\lib\tensorflow_cc.dll -Force
-Copy-Item  $TensorFlowSourceDir\bazel-bin\tensorflow\libtensorflow_cc.so.if.lib $TensorFlowBinDir\tensorflow\lib\tensorflow_cc.lib -Force
+```powershell
+Set-StrictMode -Version latest
+$ErrorActionPreference = "Stop"
 
-Copy-Item $TensorFlowSourceDir\tensorflow\core $TensorFlowBinDir\tensorflow\include\tensorflow\core -Recurse -Container  -Filter "*.h" -Force
-Copy-Item $TensorFlowSourceDir\tensorflow\cc $TensorFlowBinDir\tensorflow\include\tensorflow\cc -Recurse -Container -Filter "*.h" -Force
+$tfLibDir = "$pwd\tensorflow-1.13.1_cc"
+Remove-Item $tfLibDir -ErrorAction SilentlyContinue -Force -Recurse
+mkdir $tfLibDir | Out-Null
 
-Copy-Item $TensorFlowSourceDir\bazel-genfiles\tensorflow\core\ $TensorFlowBinDir\tensorflow\include_pb\tensorflow\core -Recurse -Container -Filter "*.h" -Force
-Copy-Item $TensorFlowSourceDir\bazel-genfiles\tensorflow\cc $TensorFlowBinDir\tensorflow\include_pb\tensorflow\cc -Recurse -Container -Filter "*.h" -Force
+$tfSourceDir = "D:\tf-win\source"
+
+# Tensorflow lib and dll
+Copy-Item  $tfSourceDir\bazel-bin\tensorflow\libtensorflow_cc.so $tfLibDir\tensorflow_cc.dll
+Copy-Item  $tfSourceDir\bazel-bin\tensorflow\liblibtensorflow_cc.so.ifso $tfLibDir\tensorflow_cc.lib
+
+# Tensorflow includes
+Copy-Item $tfSourceDir\tensorflow\core $tfLibDir\include\tensorflow\core -Recurse -Filter "*.h"
+Copy-Item $tfSourceDir\tensorflow\cc $tfLibDir\include\tensorflow\cc -Recurse -Filter "*.h"
+
+Copy-Item $tfSourceDir\bazel-genfiles\tensorflow\core $tfLibDir\include_pb\tensorflow\core -Recurse -Filter "*.h"
+Copy-Item $tfSourceDir\bazel-genfiles\tensorflow\cc $tfLibDir\include_pb\tensorflow\cc -Recurse -Filter "*.h"
+
+# Protobuf includes.
+Copy-Item $tfSourceDir\bazel-source\external\protobuf_archive\src\google $tfLibDir\include_proto\google -Recurse -Filter "*.h" 
 
 # Absl includes.
-Copy-Item $TensorFlowSourceDir\bazel-source\external\com_google_absl\absl $TensorFlowBinDir\absl\include\absl\ -Recurse -Container -Filter "*.h" -Force
+Copy-Item $tfSourceDir\bazel-source\external\com_google_absl\absl $tfLibDir\include_absl\absl -Recurse -Filter "*.h" 
 
 # Eigen includes
-Copy-Item $TensorFlowSourceDir\bazel-source\external\eigen_archive\ $TensorFlowBinDir\Eigen\eigen_archive -Recurse -Force
-Copy-Item $TensorFlowSourceDir\third_party\eigen3 $TensorFlowBinDir\Eigen\include\third_party\eigen3\ -Recurse -Force
-```
+Copy-Item $tfSourceDir\bazel-source\external\eigen_archive\ $tfLibDir\include_eigen_archive -Recurse
+Copy-Item $tfSourceDir\third_party\eigen3 $tfLibDir\include_eigen\third_party\eigen3\ -Recurse
 
 ```
-D:\MyUsers\Haebin\repo\tf-c-api\Lib\tensorflow-1.13.1_cc\include
-D:\MyUsers\Haebin\repo\tf-c-api\Lib\tensorflow-1.13.1_cc\include_pb
-D:\MyUsers\Haebin\repo\tf-c-api\Lib\tensorflow-1.13.1_cc\Eigen\include
-D:\MyUsers\Haebin\repo\tf-c-api\Lib\tensorflow-1.13.1_cc\absl\include
-D:\MyUsers\Haebin\repo\tf-c-api\Lib\tensorflow-1.13.1_cc\Eigen\eigen_archive
-D:\MyUsers\Haebin\repo\tf-c-api\Lib\tensorflow-1.13.1_cc\proto
-```
-
-<https://github.com/node-tensorflow/node-tensorflow/blob/master/tools/install.sh>
 
 ##### preprocessor definition
 
@@ -914,6 +912,8 @@ NOMINMAX
 ```
 
 
+
+실행해보고 external symbol이 없다고 뜨면 그 심볼들을 가지고 `tf_exported_symbols_msvc.lds`에 넣고 다시 빌드하면 된다.
 
 
 
@@ -929,11 +929,28 @@ TF_BOOL 지원 안 함 : <https://github.com/tensorflow/tensorflow/issues/20741>
 
 
 
-tf lite용 C++ library는 아주 최신 버전에서만 겨우 지원하는 상황 (물론 이마저도 windows 지원은 안 함): 
+tf lite용 C++ library는 모바일 용으로밖에 지원하지 않는 상황 (물론 이마저도 windows 지원은 안 함): 
 
 <https://github.com/tensorflow/tensorflow/issues/20905>
 
 <https://github.com/tensorflow/tensorflow/commit/030088358322c883086817a732f1cbe9dd84bb49#diff-866c5e896c5bfd544d4e642ed2e3d2bd>
+
+
+
+`bazel build --config opt //tensorflow/lite:libtensorflowlite.so` : 빌드 깨짐, 모바일용이라 그런듯?
+
+
+
+TFLite를 C++로 윈도우에서 돌리는 방법은 현재 없습니다.
+
+하지만 TFLite Android C++ api는 있습니다.
+
+<https://zimenglyu.com/en/ml/android/tensorflow/2018/11/27/tflite-android-ndk-eng.html>
+<https://stackoverflow.com/questions/49834875/problems-with-using-tensorflow-lite-c-api-in-android-studio-project>
+
+<https://github.com/tensorflow/tensorflow/issues/20905>
+
+어차피 windows에서 하는 의미가 없으므로(android용이기 때문) linux에서 빌드. (windows에서는 빌드 실패)
 
 
 
