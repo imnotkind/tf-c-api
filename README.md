@@ -986,6 +986,33 @@ freeze_graph --input_graph=/tmp/mobilenet_v1_224.pb \
   --output_node_names=MobileNetV1/Predictions/Reshape_1
 ```
 
+```python
+import sys
+import tensorflow as tf
+from tensorflow.python.tools import freeze_graph
+from tensorflow.python.tools import optimize_for_inference_lib
+
+
+# Freeze the graph
+
+input_graph_path = 'model/fcn.pb'
+checkpoint_path = 'model/fcn-ckpt/model.ckpt-haebin' #prefix of checkpoint, only need .index and .data-???, not .meta
+input_saver_def_path = ""
+input_binary = True
+output_node_names = "Pred"
+restore_op_name = "save/restore_all"
+filename_tensor_name = "save/Const:0"
+output_frozen_graph_name = 'model/frozen_fcn.pb'
+#output_optimized_graph_name = 'optimized_'+MODEL_NAME+'.pb'
+clear_devices = True
+
+
+freeze_graph.freeze_graph(input_graph_path, input_saver_def_path,
+                          input_binary, checkpoint_path, output_node_names,
+                          restore_op_name, filename_tensor_name,
+                          output_frozen_graph_name, clear_devices, "")
+```
+
 
 
 # frozen pb file -> tflite file
@@ -1015,3 +1042,31 @@ open("model/mymodel.tflite", "wb").write(tflite_model)
 
 
 `import/`와 `:0`는 빼도 된다
+
+
+
+# frozen pb -> tf js
+
+`pip install tensorflowjs==0.8.5 ` https://github.com/tensorflow/tfjs/issues/1541
+
+pb에서 변환할 수 있는 건 구버전 뿐이다
+
+```bash
+tensorflowjs_converter `
+    --input_format=tf_frozen_model `
+    --output_node_names='MobilenetV1/Predictions/Reshape_1' `
+    frozen_mobilenet.pb `
+    frozen_mobilenet.js
+```
+
+```bash
+tensorflowjs_converter `
+    --input_format=tf_frozen_model `
+    --output_node_names='output/ArgMax' `
+    mymodel.pb `
+    mymodel.js
+```
+
+
+
+<https://stackoverflow.com/questions/54665842/when-importing-tensorflow-i-get-the-following-error-no-module-named-numpy-cor>

@@ -38,5 +38,5 @@ def mymodel():
   open(GRAPH_PREFIX+".tflite", "wb").write(tflite_model)
 
 if __name__=="__main__":
-  mymodel()
-  #frozen_fcn()
+  #mymodel()
+  frozen_fcn()
