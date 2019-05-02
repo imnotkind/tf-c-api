@@ -129,7 +129,7 @@ int fcn_model_POC()
 	}
 
 	tensor_t<float> i2; //keep_prob
-	i2.dims = {}; //scalar value
+	i2.dims = { 1 }; //scalar value
 	i2.vals = { 1.0 }; //keep_prob : 1.0
 
 

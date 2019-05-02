@@ -30,7 +30,7 @@ int FCN_ModelCreate(model_t* model, const char* graph_def_filename)
 	// Handles to the interesting operations in the graph.
 	model->input.oper = TF_GraphOperationByName(g, "input_image"); //DT_FLOAT // (a,b,c,3) : RGB (not BGR)
 	model->input.index = 0;
-	model->input2.oper = TF_GraphOperationByName(g, "keep_probability"); //DT_FLOAT // scalar
+	model->input2.oper = TF_GraphOperationByName(g, "keep_probability"); //DT_FLOAT // scalar -> changed to (1)
 	model->input2.index = 0;
 	model->target.oper = TF_GraphOperationByName(g, "GTLabel"); //DT_INT32 // (a,b,c,1)
 	model->target.index = 0;

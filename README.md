@@ -1043,6 +1043,8 @@ open("model/mymodel.tflite", "wb").write(tflite_model)
 
 `import/`와 `:0`는 빼도 된다
 
+<https://github.com/tensorflow/tensorflow/issues/23932> : scalar value는 [1]로 대체
+
 
 
 # frozen pb -> tf js
