@@ -30,19 +30,19 @@ int FCN_ModelCreate(model_t* model, const char* graph_def_filename)
 	// Handles to the interesting operations in the graph.
 	model->input.oper = TF_GraphOperationByName(g, "input_image"); //DT_FLOAT // (a,b,c,3) : RGB (not BGR)
 	model->input.index = 0;
-	model->input2.oper = TF_GraphOperationByName(g, "keep_probabilty"); //DT_FLOAT // scalar
+	model->input2.oper = TF_GraphOperationByName(g, "keep_probability"); //DT_FLOAT // scalar
 	model->input2.index = 0;
 	model->target.oper = TF_GraphOperationByName(g, "GTLabel"); //DT_INT32 // (a,b,c,1)
 	model->target.index = 0;
 	model->output.oper = TF_GraphOperationByName(g, "Pred"); //DT_INT64 // (a,b,c)
 	model->output.index = 0;
 
-	model->init_op = TF_GraphOperationByName(g, "init_1");
+	model->init_op = TF_GraphOperationByName(g, "init");
 	model->train_op = TF_GraphOperationByName(g, "Adam");
-	model->save_op = TF_GraphOperationByName(g, "save_1/control_dependency");
-	model->restore_op = TF_GraphOperationByName(g, "save_1/restore_all");
+	model->save_op = TF_GraphOperationByName(g, "save/control_dependency");
+	model->restore_op = TF_GraphOperationByName(g, "save/restore_all");
 
-	model->checkpoint_file.oper = TF_GraphOperationByName(g, "save_1/Const");
+	model->checkpoint_file.oper = TF_GraphOperationByName(g, "save/Const");
 	model->checkpoint_file.index = 0;
 
 	return 1;
