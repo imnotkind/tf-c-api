@@ -193,7 +193,7 @@ def frozen_fcn_pb():
     print(img.shape, img.dtype)
 
     k = np.array([1]).astype('float32')
-    pred = sess.run(OUTPUT1, feed_dict={INPUT1: img, INPUT2: k})
+    pred = sess.run(OUTPUT1, feed_dict={INPUT1: img}) #default placeholder - , INPUT2: k})
     pred_img = np.squeeze(pred)
 
     fig, (ax0, ax1) = plt.subplots(nrows=1,ncols=2, figsize=(16,12), sharex=True,sharey=True)
@@ -225,11 +225,6 @@ def frozen_fcn_tflite():
     print(img.shape, img.dtype)
 
     interpreter.set_tensor(input_details[0]['index'], img)
-    
-    # keep_probability
-    k = np.array([1]).astype('float32')
-    print(k.shape, k.dtype)
-    interpreter.set_tensor(input_details[1]['index'], k)
 
 
     interpreter.invoke()

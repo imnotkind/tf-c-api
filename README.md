@@ -1025,7 +1025,7 @@ tflite_convert `
   --output_format=TFLITE `
   --inference_type=QUANTIZED_UINT8 `
   --std_dev_values=128,0 --mean_values=128,1 `
-  --default_ranges_min=-6 --default_ranges_max=6 `
+  --default_ranges_min=-6 --default_ranges_max=6
 ```
 
 ```python
@@ -1040,6 +1040,19 @@ converter = tf.lite.TFLiteConverter.from_frozen_graph(
 tflite_model = converter.convert()
 
 open("model/mymodel.tflite", "wb").write(tflite_model)
+```
+
+```bash
+tflite_convert `
+  --output_file=model/frozen_fcn.tflite `
+  --graph_def_file=model/frozen_fcn.pb `
+  --input_arrays=input_image `
+  --output_arrays=Pred `
+  --input_shapes=1,256,256,3 `
+  --output_format=TFLITE `
+  --inference_type=QUANTIZED_UINT8 `
+  --std_dev_values=128 --mean_values=128 `
+  --default_ranges_min=-6 --default_ranges_max=6
 ```
 
 
@@ -1071,4 +1084,3 @@ pb에서 변환할 수 있는 건 구버전 뿐이다
 
 
 <https://www.tensorflow.org/js/tutorials/conversion/import_saved_model>
-

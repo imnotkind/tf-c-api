@@ -19,5 +19,22 @@ def frozen_fcn():
 
   open(GRAPH_PREFIX+".tflite", "wb").write(tflite_model)
 
+def frozen_fcn_default_placeholder():
+  GRAPH_PREFIX = "model/frozen_fcn"
+
+  graph_def_file = GRAPH_PREFIX+".pb"
+  input_arrays = ["input_image"]
+  input_shapes = {
+    "input_image" : [1, 256, 256, 3],
+  }
+  output_arrays = ["Pred"]
+  
+
+  converter = tf.lite.TFLiteConverter.from_frozen_graph(
+    graph_def_file, input_arrays, output_arrays, input_shapes)
+  tflite_model = converter.convert()
+
+  open(GRAPH_PREFIX+".tflite", "wb").write(tflite_model)
+
 if __name__=="__main__":
-  frozen_fcn()
+  frozen_fcn_default_placeholder()
