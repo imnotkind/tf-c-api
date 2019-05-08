@@ -50,7 +50,11 @@ int fcn_model()
 	}
 	else {
 		for (int i = 0; i < img.rows; ++i) {
-			i1.vals.insert(i1.vals.end(), img.ptr<float>(i), img.ptr<float>(i) + img.cols);
+			for (int j = 0; j < img.cols; ++j) {
+				for (int k = 0; k < img.channels(); ++k) {
+					i1.vals.push_back(img.at<float>(i, j, k));
+				}
+			}
 		}
 	}
 
@@ -119,12 +123,17 @@ int fcn_model_POC()
 
 	tensor_t<float> i1; //image
 	i1.dims = { 1, img.rows, img.cols, img.channels() };
-	if (img.isContinuous()) {
+	if (!img.isContinuous()) {
 		i1.vals.assign((float*)img.datastart, (float*)img.dataend);
 	}
 	else {
 		for (int i = 0; i < img.rows; ++i) {
-			i1.vals.insert(i1.vals.end(), img.ptr<float>(i), img.ptr<float>(i) + img.cols);
+			for (int j = 0; j < img.cols; ++j) {
+				for (int k = 0; k < img.channels(); ++k) {
+					i1.vals.push_back(img.at<float>(i, j, k));
+				}
+			}
+			
 		}
 	}
 

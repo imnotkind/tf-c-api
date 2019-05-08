@@ -14,7 +14,7 @@ output_node_names = "Pred"
 restore_op_name = "save/restore_all"
 filename_tensor_name = "save/Const:0"
 output_frozen_graph_name = 'model/frozen_fcn.pb'
-#output_optimized_graph_name = 'optimized_'+MODEL_NAME+'.pb'
+output_optimized_graph_name = 'model/frozen_fcn_opt.pb'
 clear_devices = True
 
 
@@ -24,25 +24,24 @@ freeze_graph.freeze_graph(input_graph_path, input_saver_def_path,
                           output_frozen_graph_name, clear_devices, "")
 
 
-'''
+
 # Optimize for inference
 
 input_graph_def = tf.GraphDef()
-with tf.gfile.Open(output_frozen_graph_name, "r") as f:
+with tf.gfile.Open(output_frozen_graph_name, "rb") as f:
     data = f.read()
     input_graph_def.ParseFromString(data)
 
 output_graph_def = optimize_for_inference_lib.optimize_for_inference(
         input_graph_def,
-        ["I"], # an array of the input node(s)
-        ["O"], # an array of output nodes
+        ["input_image","keep_probability"], # an array of the input node(s)
+        ["Pred"], # an array of output nodes
         tf.float32.as_datatype_enum)
 
 
 # Save the optimized graph
 
-f = tf.gfile.FastGFile(output_optimized_graph_name, "w")
+f = tf.gfile.FastGFile(output_optimized_graph_name, "wb")
 f.write(output_graph_def.SerializeToString())
 
 # tf.train.write_graph(output_graph_def, './', output_optimized_graph_name)
-'''

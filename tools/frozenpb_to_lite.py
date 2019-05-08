@@ -7,7 +7,7 @@ def frozen_fcn():
   graph_def_file = GRAPH_PREFIX+".pb"
   input_arrays = ["input_image", "keep_probability"]
   input_shapes = {
-    "input_image" : [1, 900, 600, 3],
+    "input_image" : [1, 256, 256, 3],
     "keep_probability" : [1], #no scalar value : https://github.com/tensorflow/tensorflow/issues/23932
   }
   output_arrays = ["Pred"]

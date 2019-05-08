@@ -929,21 +929,7 @@ TF_BOOL 지원 안 함 : <https://github.com/tensorflow/tensorflow/issues/20741>
 
 
 
-tf lite용 C++ library는 모바일 용으로밖에 지원하지 않는 상황 (물론 이마저도 windows 지원은 안 함): 
-
-<https://github.com/tensorflow/tensorflow/issues/20905>
-
-<https://github.com/tensorflow/tensorflow/commit/030088358322c883086817a732f1cbe9dd84bb49#diff-866c5e896c5bfd544d4e642ed2e3d2bd>
-
-
-
-`bazel build --config opt //tensorflow/lite:libtensorflowlite.so` : 빌드 깨짐, 모바일용이라 그런듯?
-
-
-
-TFLite를 C++로 윈도우에서 돌리는 방법은 현재 없습니다.
-
-하지만 TFLite Android C++ api는 있습니다.
+TFLite Android C++ api
 
 <https://zimenglyu.com/en/ml/android/tensorflow/2018/11/27/tflite-android-ndk-eng.html>
 <https://stackoverflow.com/questions/49834875/problems-with-using-tensorflow-lite-c-api-in-android-studio-project>
@@ -953,6 +939,18 @@ TFLite를 C++로 윈도우에서 돌리는 방법은 현재 없습니다.
 어차피 windows에서 하는 의미가 없으므로(android용이기 때문) linux에서 빌드. (windows에서는 빌드 실패)
 
 
+
+그냥 java api를 쓰는 걸로.
+
+custom model을 쓰면 interpreter가 죽어버림. (python에서)
+
+<https://github.com/tensorflow/tensorflow/issues/25231> 이걸로 해보자.
+
+<https://codelabs.developers.google.com/codelabs/tensorflow-for-poets-2-tflite>
+
+<https://github.com/dailystudio/ml/tree/master/deeplab>
+
+<https://stackoverflow.com/questions/51502539/reducing-tflite-model-size>
 
 
 
@@ -1018,11 +1016,16 @@ freeze_graph.freeze_graph(input_graph_path, input_saver_def_path,
 # frozen pb file -> tflite file
 
 ```bash
-tflite_convert \
-  --output_file=/tmp/mobilenet_v1_1.0_224.tflite \
-  --graph_def_file=/tmp/mobilenet_v1_0.50_128/frozen_graph.pb \
-  --input_arrays=input \
-  --output_arrays=MobilenetV1/Predictions/Reshape_1
+tflite_convert `
+  --output_file=model/frozen_fcn.tflite `
+  --graph_def_file=model/frozen_fcn.pb `
+  --input_arrays=input_image,keep_probability `
+  --output_arrays=Pred `
+  --input_shapes=1,256,256,3:1 `
+  --output_format=TFLITE `
+  --inference_type=QUANTIZED_UINT8 `
+  --std_dev_values=128,0 --mean_values=128,1 `
+  --default_ranges_min=-6 --default_ranges_max=6 `
 ```
 
 ```python
@@ -1049,26 +1052,23 @@ open("model/mymodel.tflite", "wb").write(tflite_model)
 
 # frozen pb -> tf js
 
+```bash
+tensorflowjs_converter `
+    --input_format=tf_frozen_model `
+    --output_node_names='Pred' `
+    --saved_model_tags=serve `
+    --output_json=true `
+    frozen_fcn.pb `
+    frozen_fcn.js
+```
+
 `pip install tensorflowjs==0.8.5 ` https://github.com/tensorflow/tfjs/issues/1541
 
 pb에서 변환할 수 있는 건 구버전 뿐이다
 
-```bash
-tensorflowjs_converter `
-    --input_format=tf_frozen_model `
-    --output_node_names='MobilenetV1/Predictions/Reshape_1' `
-    frozen_mobilenet.pb `
-    frozen_mobilenet.js
-```
-
-```bash
-tensorflowjs_converter `
-    --input_format=tf_frozen_model `
-    --output_node_names='output/ArgMax' `
-    mymodel.pb `
-    mymodel.js
-```
+`pip install numpy --upgrade` : https://stackoverflow.com/questions/54665842/when-importing-tensorflow-i-get-the-following-error-no-module-named-numpy-cor
 
 
 
-<https://stackoverflow.com/questions/54665842/when-importing-tensorflow-i-get-the-following-error-no-module-named-numpy-cor>
+<https://www.tensorflow.org/js/tutorials/conversion/import_saved_model>
+
