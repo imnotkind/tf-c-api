@@ -954,6 +954,10 @@ custom model을 쓰면 interpreter가 죽어버림. (python에서)
 
 
 
+걍 여기서 최적화해놓은 걸 쓰자.
+
+<https://www.tensorflow.org/lite/models/segmentation/overview>
+
 # Python TF graph -> pb file
 
 **this is not freezing, so we can use this pb for training!**
