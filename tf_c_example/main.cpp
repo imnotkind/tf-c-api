@@ -5,14 +5,88 @@ int linear_model();
 int frozen_model();
 int fcn_model();
 int fcn_model_POC();
+int keras_model();
 
 int main(int argc, char** argv) {
-	if (fcn_model_POC() == 1)
+	if (keras_model() == 1)
 	{
 		cout << "ERROR" << endl;
 	}
 }
 
+int keras_model()
+{
+	const char* graph_def_filename = "models/keras/keras.pb";
+	const char* checkpoint_prefix = "models/keras/keras.ckpt";
+	int restore = 1;
+
+
+	model_t model;
+	cout << "Loading graph" << endl;
+	if (!FCN_ModelCreate(&model, graph_def_filename)) return 1;
+	if (restore) {
+		cout << "Restoring weights from checkpoint (remove the checkpoints directory to reset)" << endl;
+		if (!FCN_ModelCheckpoint(&model, checkpoint_prefix, RESTORE)) return 1;
+	}
+	else {
+		cout << "Initializing model weights" << endl;
+		if (!FCN_ModelInit(&model)) return 1;
+	}
+
+	cout << "Initial predictions" << endl;
+
+	Mat img = imread("images/wqds_backbead_0_3.png", IMREAD_COLOR); // BGR
+	//showimage_fromMat(img);
+
+	cvtColor(img, img, COLOR_BGR2RGB);
+	//showimage_fromMat(img);
+
+	img.convertTo(img, CV_32FC3);
+
+	tensor_t<float> i1; //image
+	i1.dims = { 1, img.rows, img.cols, img.channels() };
+	if (img.isContinuous()) {
+		i1.vals.assign((float*)img.datastart, (float*)img.dataend);
+	}
+	else {
+		for (int i = 0; i < img.rows; ++i) {
+			for (int j = 0; j < img.cols; ++j) {
+				for (int k = 0; k < img.channels(); ++k) {
+					i1.vals.push_back(img.at<float>(i, j, k));
+				}
+			}
+		}
+	}
+
+
+	if (!KERAS_ModelPredict(&model, i1)) return 1;
+
+	exit(0);
+
+	cout << "Training for a few steps" << endl;
+	for (int i = 0; i < 50000; ++i) {
+		cout << "iteration " << i << endl;
+		if (!KERAS_ModelRunTrainStep(&model)) return 1;
+
+		if (i % 100 == 0)
+		{
+			cout << "Saving checkpoint" << endl;
+			if (!KERAS_ModelCheckpoint(&model, checkpoint_prefix, SAVE)) return 1;
+		}
+	}
+
+	cout << "Updated predictions" << endl;
+	if (!KERAS_ModelPredict(&model, i1)) return 1;
+
+
+	cout << "Saving checkpoint" << endl;
+	if (!KERAS_ModelCheckpoint(&model, checkpoint_prefix, SAVE)) return 1;
+
+
+
+	return 0;
+
+}
 
 int fcn_model()
 {

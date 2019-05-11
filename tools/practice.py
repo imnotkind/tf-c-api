@@ -232,8 +232,63 @@ def frozen_fcn_tflite():
     output_data = interpreter.get_tensor(output_details[0]['index'])
     print(output_data)
 
+
+
+
+
+def keras_model():
+    f = gfile.FastGFile('aa/keras.pb', 'rb')
+    img = cv2.imread("data/wqds_backbead_0_3.png", cv2.IMREAD_COLOR)
+    img = img[...,::-1] # bgr to rgb
+    img = img.astype('float32')
+    img = np.expand_dims(img, axis=0)
+
+
+    
+    sess = tf.Session()
+    graph_def = tf.GraphDef()
+    graph_def.ParseFromString(f.read())
+    sess.graph.as_default()
+    tf.import_graph_def(graph_def)
+    graph = tf.get_default_graph()
+
+    a = [x for x in tf.get_default_graph().get_operations() if x.type == "Placeholder"]
+    print(a)
+    
+    saver = tf.train.Saver()
+    ckpt = tf.train.get_checkpoint_state("aa")
+    saver.restore(sess, ckpt)
+
+    INPUT1 = graph.get_tensor_by_name("import/input_1:0")
+    OUTPUT1 = graph.get_tensor_by_name("import/softmax/Softmax:0")
+
+    pred = sess.run(OUTPUT1, feed_dict={INPUT1: img})
+    print(pred.shape, pred.dtype)
+
+def keras_model2():
+    sess = tf.Session()
+    saver = tf.train.import_meta_graph('keras/keras.ckpt.meta')
+    saver.restore(sess, "keras/keras.ckpt")
+
+    sess.graph.as_default()
+    graph = tf.get_default_graph()
+
+    a = [x for x in tf.get_default_graph().get_operations() if x.type == "Placeholder"]
+    #print(a)
+
+    img = cv2.imread("data/wqds_backbead_0_3.png", cv2.IMREAD_COLOR)
+    img = img[...,::-1] # bgr to rgb
+    img = img.astype('float32')
+    img = np.expand_dims(img, axis=0)
+
+    INPUT1 = graph.get_tensor_by_name("input_1:0")
+    OUTPUT1 = graph.get_tensor_by_name("softmax/Softmax:0")
+    TARGET1 = graph.get_tensor_by_name("softmax_target:0")
+
+    pred = sess.run(OUTPUT1, feed_dict={INPUT1: img})
+    print(pred, pred.shape, pred.dtype)
+
+
 if __name__=="__main__":
-    frozen_fcn_tflite()
-
-
-
+    keras_model2()
+    

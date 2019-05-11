@@ -16,9 +16,11 @@ x64/
 /tf_c_example/logs_poc/
 /tf_c_example/checkpoints/
 /tf_c_example/Materials_In_Vessels
+/tf_c_example/models/
 /tools/tensorboard_log/
 /tools/model/fcn-ckpt/
 /tools/model/
 /tools/data/
+/tools/keras/
 frozen_fcn.pb
 #exception
