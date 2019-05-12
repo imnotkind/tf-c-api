@@ -10,7 +10,7 @@ print(model.output)
 print(model.targets)
 print(dir(model))
 print(K.learning_phase())
-K.set_learning_phase(0) #0 : test, 1 : train
+#K.set_learning_phase(0) #0 : test, 1 : train
 print(K.learning_phase())
 
 sess = K.get_session()

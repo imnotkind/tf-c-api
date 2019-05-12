@@ -5,19 +5,20 @@ int linear_model();
 int frozen_model();
 int fcn_model();
 int fcn_model_POC();
-int keras_model();
+int keras_model_POC();
 
 int main(int argc, char** argv) {
-	if (keras_model() == 1)
+	if (keras_model_POC() == 1)
 	{
 		cout << "ERROR" << endl;
 	}
 }
 
-int keras_model()
+int keras_model_POC()
 {
 	const char* graph_def_filename = "models/keras/keras.pb";
 	const char* checkpoint_prefix = "models/keras/keras.ckpt";
+	const char* checkpoint_prefix2 = "models/keras/keras2.ckpt";
 	int restore = 1;
 	int frozen = 0;
 
@@ -66,18 +67,16 @@ int keras_model()
 
 	if (!KERAS_ModelPredict(&model, i1)) return 1;
 
-	exit(0);
+
+	tensor_t<float> i2; //class
+	i2.dims = { 1, 5 }; 
+	i2.vals = { 1.0, 0.0, 0.0, 0.0, 0.0 }; //class :  0
 
 	cout << "Training for a few steps" << endl;
-	for (int i = 0; i < 50000; ++i) {
+	for (int i = 0; i < 50; ++i) {
 		cout << "iteration " << i << endl;
-		if (!KERAS_ModelRunTrainStep(&model)) return 1;
+		if (!KERAS_ModelRunTrainStep_POC(&model, i1, i2)) return 1;
 
-		if (i % 100 == 0)
-		{
-			cout << "Saving checkpoint" << endl;
-			if (!KERAS_ModelCheckpoint(&model, checkpoint_prefix, SAVE)) return 1;
-		}
 	}
 
 	cout << "Updated predictions" << endl;
@@ -85,7 +84,7 @@ int keras_model()
 
 
 	cout << "Saving checkpoint" << endl;
-	if (!KERAS_ModelCheckpoint(&model, checkpoint_prefix, SAVE)) return 1;
+	if (!KERAS_ModelCheckpoint(&model, checkpoint_prefix2, SAVE)) return 1;
 
 
 

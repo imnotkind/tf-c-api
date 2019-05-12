@@ -36,7 +36,7 @@ int KERAS_ModelCreate(model_t* model, const char* graph_def_filename)
 	model->output.index = 0;
 
 	model->init_op = TF_GraphOperationByName(g, "init");
-	model->train_op = TF_GraphOperationByName(g, "Adam");
+	model->train_op = TF_GraphOperationByName(g, "training");
 	model->save_op = TF_GraphOperationByName(g, "save/control_dependency");
 	model->restore_op = TF_GraphOperationByName(g, "save/restore_all");
 
@@ -136,92 +136,34 @@ int KERAS_ModelPredict(model_t* model, tensor_t<float> i1)
 	return 1;
 }
 
-int KERAS_ModelRunTrainStep(model_t* model)
+int KERAS_ModelRunTrainStep_POC(model_t* model, tensor_t<float> i1, tensor_t<float> i2)
 {
-	string test_label_dir = "Materials_In_Vessels/LiquidSolidLabels/";
-	string train_img_dir = "Materials_In_Vessels/Train_Images/";
 
 
+	TF_Tensor* t1 = TF_AllocateTensor(TF_FLOAT, i1.dims.data(), i1.dims.size(), i1.vals.size() * sizeof(float));
+	memcpy(TF_TensorData(t1), i1.vals.data(), i1.vals.size() * sizeof(float));
 
-	auto k = get_all_files_names_within_folder(train_img_dir.c_str());
-	for (auto fname : k)
-	{
-		//cout << fname;
-
-		Mat img = imread(train_img_dir + fname, IMREAD_COLOR); // BGR
-		cvtColor(img, img, COLOR_BGR2RGB);
-		img.convertTo(img, CV_32FC3);
-
-		tensor_t<float> i1; //image
-		i1.dims = { 1, img.rows, img.cols, img.channels() };
-		if (img.isContinuous()) {
-			i1.vals.assign((float*)img.datastart, (float*)img.dataend);
-		}
-		else {
-			for (int i = 0; i < img.rows; ++i) {
-				i1.vals.insert(i1.vals.end(), img.ptr<float>(i), img.ptr<float>(i) + img.cols);
-			}
-		}
-
-		tensor_t<float> i2; //keep_prob
-		i2.dims = {}; //scalar value
-		i2.vals = { 1.0 }; //keep_prob : 1.0
-
-		Mat label = imread(test_label_dir + fname, IMREAD_GRAYSCALE);
-
-		if (label.empty())
-		{
-			//cout << " : PASS" << endl;
-			continue;
-		}
-
-		label.convertTo(label, CV_32SC1);
-
-		tensor_t<int> i3; //GT_Label
-		i3.dims = { 1, label.rows, label.cols, label.channels() };
-		if (label.isContinuous()) {
-			i3.vals.assign((int*)label.datastart, (int*)label.dataend);
-		}
-		else {
-			for (int i = 0; i < label.rows; ++i) {
-				i3.vals.insert(i3.vals.end(), label.ptr<int>(i), label.ptr<int>(i) + label.cols);
-			}
-		}
-
-		TF_Tensor* t1 = TF_AllocateTensor(TF_FLOAT, i1.dims.data(), i1.dims.size(), i1.vals.size() * sizeof(float));
-		memcpy(TF_TensorData(t1), i1.vals.data(), i1.vals.size() * sizeof(float));
-
-		TF_Tensor* t2 = TF_AllocateTensor(TF_FLOAT, i2.dims.data(), i2.dims.size(), i2.vals.size() * sizeof(float));
-		memcpy(TF_TensorData(t2), i2.vals.data(), i2.vals.size() * sizeof(float));
-
-		TF_Tensor* t3 = TF_AllocateTensor(TF_INT32, i3.dims.data(), i3.dims.size(), i3.vals.size() * sizeof(int));
-		memcpy(TF_TensorData(t3), i3.vals.data(), i3.vals.size() * sizeof(int));
+	TF_Tensor* t2 = TF_AllocateTensor(TF_FLOAT, i2.dims.data(), i2.dims.size(), i2.vals.size() * sizeof(float));
+	memcpy(TF_TensorData(t2), i2.vals.data(), i2.vals.size() * sizeof(float));
 
 
-		TF_Output inputs[3] = { model->input, model->input2, model->target };
-		TF_Tensor* input_values[3] = { t1, t2, t3 };
-		const TF_Operation* train_op[1] = { model->train_op };
+	TF_Output inputs[2] = { model->input, model->target };
+	TF_Tensor* input_values[2] = { t1, t2 };
+	const TF_Operation* train_op[1] = { model->train_op };
 
 
-		TF_SessionRun(model->session,
-			NULL, // Run options.
-			inputs, input_values, 3, // Input tensors, input tensor values, number of inputs.
-			NULL, NULL, 0, // Output tensors, output tensor values, number of outputs.
-			train_op, 1, // Target operations, number of targets.
-			NULL, // Run metadata.
-			model->status // Output status.
-		);
+	TF_SessionRun(model->session,
+		NULL, // Run options.
+		inputs, input_values, 2, // Input tensors, input tensor values, number of inputs.
+		NULL, NULL, 0, // Output tensors, output tensor values, number of outputs.
+		train_op, 1, // Target operations, number of targets.
+		NULL, // Run metadata.
+		model->status // Output status.
+	);
 
 
-		TF_DeleteTensor(t1);
-		TF_DeleteTensor(t2);
-		TF_DeleteTensor(t3);
-
-		//cout << endl;
-
-		if (!Okay(model->status))
-			return 0;
-	}
+	TF_DeleteTensor(t1);
+	TF_DeleteTensor(t2);
 
 
 	return Okay(model->status);

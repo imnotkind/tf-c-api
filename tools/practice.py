@@ -256,6 +256,9 @@ def frozen_keras_model():
     INPUT1 = graph.get_tensor_by_name("import/input_1:0")
     OUTPUT1 = graph.get_tensor_by_name("import/softmax/Softmax:0")
 
+    print(TARGET1)
+
+
     pred = sess.run(OUTPUT1, feed_dict={INPUT1: img})
     print(pred, pred.shape, pred.dtype)
 
@@ -278,11 +281,12 @@ def keras_model2():
     INPUT1 = graph.get_tensor_by_name("input_1:0")
     OUTPUT1 = graph.get_tensor_by_name("softmax/Softmax:0")
     TARGET1 = graph.get_tensor_by_name("softmax_target:0")
+    print(TARGET1)
 
     pred = sess.run(OUTPUT1, feed_dict={INPUT1: img})
     print(pred, pred.shape, pred.dtype)
 
 
 if __name__=="__main__":
-    frozen_keras_model()
+    keras_model2()
     

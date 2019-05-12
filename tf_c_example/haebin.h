@@ -74,7 +74,7 @@ int KERAS_ModelInit(model_t* model);
 int KERAS_ModelCheckpoint(model_t* model, const char* checkpoint_prefix, int type);
 int KERAS_ModelPredict(model_t* model, tensor_t<float> i1);
 void KERAS_ModelDestroy(model_t* model);
-int KERAS_ModelRunTrainStep(model_t* model);
+int KERAS_ModelRunTrainStep_POC(model_t* model, tensor_t<float> i1, tensor_t<float> i2);
 
 
 inline int Okay(TF_Status* status) {
