@@ -19,18 +19,23 @@ int keras_model()
 	const char* graph_def_filename = "models/keras/keras.pb";
 	const char* checkpoint_prefix = "models/keras/keras.ckpt";
 	int restore = 1;
+	int frozen = 0;
 
 
 	model_t model;
 	cout << "Loading graph" << endl;
-	if (!FCN_ModelCreate(&model, graph_def_filename)) return 1;
-	if (restore) {
+	if (!KERAS_ModelCreate(&model, graph_def_filename)) return 1;
+
+	if (frozen) {
+		cout << "Frozen model" << endl;
+	}
+	else if (restore) {
 		cout << "Restoring weights from checkpoint (remove the checkpoints directory to reset)" << endl;
-		if (!FCN_ModelCheckpoint(&model, checkpoint_prefix, RESTORE)) return 1;
+		if (!KERAS_ModelCheckpoint(&model, checkpoint_prefix, RESTORE)) return 1;
 	}
 	else {
 		cout << "Initializing model weights" << endl;
-		if (!FCN_ModelInit(&model)) return 1;
+		if (!KERAS_ModelInit(&model)) return 1;
 	}
 
 	cout << "Initial predictions" << endl;

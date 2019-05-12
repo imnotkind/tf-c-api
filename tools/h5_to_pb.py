@@ -21,8 +21,6 @@ saver.save(sess, 'keras/keras.ckpt')
 sess.graph.as_default()
 graph = sess.graph
 
-init = tf.global_variables_initializer()
-print(init.name)
 
 saver_def = saver.as_saver_def()
 print('Feed this tensor to set the checkpoint filename: ', saver_def.filename_tensor_name)

@@ -236,8 +236,8 @@ def frozen_fcn_tflite():
 
 
 
-def keras_model():
-    f = gfile.FastGFile('aa/keras.pb', 'rb')
+def frozen_keras_model():
+    f = gfile.FastGFile('frozen_keras/frozen_keras.pb', 'rb')
     img = cv2.imread("data/wqds_backbead_0_3.png", cv2.IMREAD_COLOR)
     img = img[...,::-1] # bgr to rgb
     img = img.astype('float32')
@@ -251,19 +251,13 @@ def keras_model():
     sess.graph.as_default()
     tf.import_graph_def(graph_def)
     graph = tf.get_default_graph()
-
-    a = [x for x in tf.get_default_graph().get_operations() if x.type == "Placeholder"]
-    print(a)
     
-    saver = tf.train.Saver()
-    ckpt = tf.train.get_checkpoint_state("aa")
-    saver.restore(sess, ckpt)
 
     INPUT1 = graph.get_tensor_by_name("import/input_1:0")
     OUTPUT1 = graph.get_tensor_by_name("import/softmax/Softmax:0")
 
     pred = sess.run(OUTPUT1, feed_dict={INPUT1: img})
-    print(pred.shape, pred.dtype)
+    print(pred, pred.shape, pred.dtype)
 
 def keras_model2():
     sess = tf.Session()
@@ -290,5 +284,5 @@ def keras_model2():
 
 
 if __name__=="__main__":
-    keras_model2()
+    frozen_keras_model()
     

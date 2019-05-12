@@ -43,6 +43,8 @@ int KERAS_ModelCreate(model_t* model, const char* graph_def_filename)
 	model->checkpoint_file.oper = TF_GraphOperationByName(g, "save/Const");
 	model->checkpoint_file.index = 0;
 
+	if (!Okay(model->status)) return 0;
+
 	return 1;
 }
 int KERAS_ModelInit(model_t* model)
@@ -86,7 +88,6 @@ int KERAS_ModelPredict(model_t* model, tensor_t<float> i1)
 	memcpy(TF_TensorData(t1), i1.vals.data(), i1.vals.size() * sizeof(float));
 
 
-
 	TF_Output inputs[1] = { model->input };
 	TF_Tensor* input_values[1] = { t1 };
 	TF_Output outputs[1] = { model->output };
@@ -101,7 +102,7 @@ int KERAS_ModelPredict(model_t* model, tensor_t<float> i1)
 		nullptr, // Run metadata.
 		model->status // Output status.
 	);
-	//TF_DeleteTensor(t1);
+	TF_DeleteTensor(t1);
 	if (!Okay(model->status)) return 0;
 
 	int expected_bytes = 5 * sizeof(float); //output : DT_FLOAT
