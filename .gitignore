@@ -22,5 +22,6 @@ x64/
 /tools/model/
 /tools/data/
 /tools/keras/
+/tools/frozen_keras/
 frozen_fcn.pb
 #exception
