@@ -27,8 +27,9 @@ typedef struct model_t {
 
 	TF_Output input, target, output;
 	TF_Output input2;
+	TF_Output loss;
 
-	TF_Operation *init_op, *train_op, *save_op, *restore_op;
+	TF_Operation *init_op, *train_op, *save_op, *restore_op, *loss_op;
 	TF_Output checkpoint_file;
 } model_t;
 
@@ -65,6 +66,7 @@ int FCN_ModelCheckpoint(model_t* model, const char* checkpoint_prefix, int type)
 int FCN_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<float> i2);
 void FCN_ModelDestroy(model_t* model);
 int FCN_ModelRunTrainStep_POC(model_t* model, tensor_t<float> i1, tensor_t<float> i2, tensor_t<int> i3);
+int FCN_ModelCalcLoss_POC(model_t * model, tensor_t<float> i1, tensor_t<float> i2, tensor_t<int> i3);
 int FCN_ModelRunTrainStep(model_t* model);
 
 

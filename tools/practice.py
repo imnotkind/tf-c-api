@@ -164,8 +164,8 @@ def mymodel():
     ax1.imshow(pred_img)
     plt.show()
 
-def frozen_fcn_pb():
-    f = gfile.FastGFile('model/frozen_fcn.pb', 'rb')
+def fcn_pb():
+    f = gfile.FastGFile('model/fcn.pb', 'rb')
 
     sess = tf.Session()
     graph_def = tf.GraphDef()
@@ -182,6 +182,9 @@ def frozen_fcn_pb():
 
     OUTPUT1 = sess.graph.get_tensor_by_name('import/Pred:0') #pred_annotation
     print(OUTPUT1)
+
+    LOSS1 = graph.get_tensor_by_name('import/Mean:0')
+    print(LOSS1)
 
     img = cv2.imread("data/acl2.jpg", cv2.IMREAD_COLOR)
     img = img[...,::-1] # bgr to rgb
@@ -262,7 +265,7 @@ def frozen_keras_model():
     pred = sess.run(OUTPUT1, feed_dict={INPUT1: img})
     print(pred, pred.shape, pred.dtype)
 
-def keras_model2():
+def keras_model():
     sess = tf.Session()
     saver = tf.train.import_meta_graph('keras/keras.ckpt.meta')
     saver.restore(sess, "keras/keras.ckpt")
@@ -281,6 +284,7 @@ def keras_model2():
     INPUT1 = graph.get_tensor_by_name("input_1:0")
     OUTPUT1 = graph.get_tensor_by_name("softmax/Softmax:0")
     TARGET1 = graph.get_tensor_by_name("softmax_target:0")
+
     print(TARGET1)
 
     pred = sess.run(OUTPUT1, feed_dict={INPUT1: img})
@@ -288,5 +292,5 @@ def keras_model2():
 
 
 if __name__=="__main__":
-    keras_model2()
+    fcn_pb()
     

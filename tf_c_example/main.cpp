@@ -8,7 +8,7 @@ int fcn_model_POC();
 int keras_model_POC();
 
 int main(int argc, char** argv) {
-	if (keras_model_POC() == 1)
+	if (fcn_model_POC() == 1)
 	{
 		cout << "ERROR" << endl;
 	}
@@ -16,6 +16,7 @@ int main(int argc, char** argv) {
 
 int keras_model_POC()
 {
+	cout << "keras model POC" << endl;
 	const char* graph_def_filename = "models/keras/keras.pb";
 	const char* checkpoint_prefix = "models/keras/keras.ckpt";
 	const char* checkpoint_prefix2 = "models/keras/keras2.ckpt";
@@ -94,6 +95,7 @@ int keras_model_POC()
 
 int fcn_model()
 {
+	cout << "fcn model" << endl;
 	const char* graph_def_filename = "models/fcn.pb";
 	const char* checkpoint_prefix = "./logs/model.ckpt-haebin";
 	int restore = DirectoryExists("logs");
@@ -130,7 +132,7 @@ int fcn_model()
 		for (int i = 0; i < img.rows; ++i) {
 			for (int j = 0; j < img.cols; ++j) {
 				for (int k = 0; k < img.channels(); ++k) {
-					i1.vals.push_back(img.at<float>(i, j, k));
+					i1.vals.push_back(img.at<cv::Vec3f>(i, j)[k]);
 				}
 			}
 		}
@@ -170,6 +172,7 @@ int fcn_model()
 
 int fcn_model_POC()
 {
+	cout << "fcn model POC" << endl;
 	const char* graph_def_filename = "models/fcn.pb";
 	const char* checkpoint_prefix_load = "./logs_poc/model.ckpt-100000";
 	const char* checkpoint_prefix_save = "./logs_poc/model.ckpt-100001";
@@ -201,17 +204,17 @@ int fcn_model_POC()
 
 	tensor_t<float> i1; //image
 	i1.dims = { 1, img.rows, img.cols, img.channels() };
-	if (!img.isContinuous()) {
+
+	if (img.isContinuous()) {
 		i1.vals.assign((float*)img.datastart, (float*)img.dataend);
 	}
 	else {
 		for (int i = 0; i < img.rows; ++i) {
 			for (int j = 0; j < img.cols; ++j) {
 				for (int k = 0; k < img.channels(); ++k) {
-					i1.vals.push_back(img.at<float>(i, j, k));
+					i1.vals.push_back(img.at<cv::Vec3f>(i, j)[k]);
 				}
 			}
-			
 		}
 	}
 
@@ -241,6 +244,8 @@ int fcn_model_POC()
 		}
 	}
 
+	if (!FCN_ModelCalcLoss_POC(&model, i1, i2, i3)) return 1;
+
 	cout << "Training for a few steps" << endl;
 	for (int i = 0; i < 5; ++i) {
 		cout << "iteration " << i << endl;
@@ -249,6 +254,8 @@ int fcn_model_POC()
 
 	cout << "Updated predictions" << endl;
 	if (!FCN_ModelPredict(&model, i1, i2)) return 1;
+
+	if (!FCN_ModelCalcLoss_POC(&model, i1, i2, i3)) return 1;
 
 
 	cout << "Saving checkpoint" << endl;
@@ -260,6 +267,7 @@ int fcn_model_POC()
 
 int frozen_model()
 {
+	cout << "frozen model" << endl;
 	const char* graph_def_filename = "models/mymodel.pb";
 
 	model_t model;
@@ -300,6 +308,7 @@ int frozen_model()
 
 
 int linear_model() {
+	cout << "linear model" << endl;
 	const char* graph_def_filename = "models/linear_example.pb";
 	const char* checkpoint_prefix = "./checkpoints/checkpoint";
 	int restore = DirectoryExists("checkpoints");

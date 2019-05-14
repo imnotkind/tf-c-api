@@ -36,11 +36,14 @@ int FCN_ModelCreate(model_t* model, const char* graph_def_filename)
 	model->target.index = 0;
 	model->output.oper = TF_GraphOperationByName(g, "Pred"); //DT_INT64 // (a,b,c)
 	model->output.index = 0;
+	model->loss.oper = TF_GraphOperationByName(g, "Mean");
+	model->loss.index = 0;
 
 	model->init_op = TF_GraphOperationByName(g, "init");
 	model->train_op = TF_GraphOperationByName(g, "Adam");
 	model->save_op = TF_GraphOperationByName(g, "save/control_dependency");
 	model->restore_op = TF_GraphOperationByName(g, "save/restore_all");
+
 
 	model->checkpoint_file.oper = TF_GraphOperationByName(g, "save/Const");
 	model->checkpoint_file.index = 0;
@@ -279,6 +282,59 @@ int FCN_ModelRunTrainStep_POC(model_t* model, tensor_t<float> i1, tensor_t<float
 	TF_DeleteTensor(t1);
 	TF_DeleteTensor(t2);
 	TF_DeleteTensor(t3);
+	return Okay(model->status);
+}
+
+int FCN_ModelCalcLoss_POC(model_t* model, tensor_t<float> i1, tensor_t<float> i2, tensor_t<int> i3) {
+
+	TF_Tensor* t1 = TF_AllocateTensor(TF_FLOAT, i1.dims.data(), i1.dims.size(), i1.vals.size() * sizeof(float));
+	memcpy(TF_TensorData(t1), i1.vals.data(), i1.vals.size() * sizeof(float));
+
+	TF_Tensor* t2 = TF_AllocateTensor(TF_FLOAT, i2.dims.data(), i2.dims.size(), i2.vals.size() * sizeof(float));
+	memcpy(TF_TensorData(t2), i2.vals.data(), i2.vals.size() * sizeof(float));
+
+	TF_Tensor* t3 = TF_AllocateTensor(TF_INT32, i3.dims.data(), i3.dims.size(), i3.vals.size() * sizeof(int));
+	memcpy(TF_TensorData(t3), i3.vals.data(), i3.vals.size() * sizeof(int));
+
+
+
+
+	TF_Output inputs[3] = { model->input, model->input2, model->target };
+	TF_Tensor* input_values[3] = { t1, t2, t3 };
+	const TF_Operation* train_op[1] = { model->train_op };
+	TF_Output outputs[1] = { model->loss };
+	TF_Tensor* output_values[1] = { NULL };
+
+
+	TF_SessionRun(model->session,
+		NULL, // Run options.
+		inputs, input_values, 3, // Input tensors, input tensor values, number of inputs.
+		outputs, output_values, 1, // Output tensors, output tensor values, number of outputs.
+		NULL, 0, // Target operations, number of targets.
+		NULL, // Run metadata.
+		model->status // Output status.
+	);
+
+
+	TF_DeleteTensor(t1);
+	TF_DeleteTensor(t2);
+	TF_DeleteTensor(t3);
+	if (!Okay(model->status)) return 0;
+
+	const auto data = static_cast<float*>(TF_TensorData(output_values[0]));
+	auto data2 = new float[1];
+
+	for (int i = 0; i < 1; i++)
+	{
+		float z = static_cast<float>(data[i]);
+		data2[i] = z;
+		cout << "LOSS : " << z << endl;
+	}
+
+
+
+	delete[] data2;
+
 	return Okay(model->status);
 }
 
