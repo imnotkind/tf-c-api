@@ -194,7 +194,8 @@ int fcn_model_POC()
 
 	cout << "Initial predictions" << endl;
 
-	Mat img = imread("images/acl2.jpg", IMREAD_COLOR); // BGR
+	//Mat img = imread("images/acl2.jpg", IMREAD_COLOR); // BGR
+	Mat img = imread("images/Alum from Soda Cans-screenshot (5).png");
 	//showimage_fromMat(img);
 
 	cvtColor(img, img, COLOR_BGR2RGB);
@@ -227,7 +228,8 @@ int fcn_model_POC()
 
 	cout << "Groundtruth Label" << endl;
 
-	Mat label = imread("labels/acl2.png", IMREAD_GRAYSCALE);
+	//Mat label = imread("labels/acl2.png", IMREAD_GRAYSCALE);
+	Mat label = imread("labels/Alum from Soda Cans-screenshot (5).png", IMREAD_GRAYSCALE);
 	show_label_image(label);
 
 	label.convertTo(label, CV_32SC1);
