@@ -2,7 +2,7 @@ from keras import backend as K
 from keras.models import load_model
 import tensorflow as tf
 
-model = load_model('model/my_model.h5')
+model = load_model('model/keras/my_model.h5')
 
 #print(model.summary())  (None,300,300,3) -> (None, 5)
 print(model.input)
@@ -16,7 +16,7 @@ K.set_learning_phase(0) #0 : test, 1 : train
 sess = K.get_session()
 
 saver = tf.train.Saver()
-saver.save(sess, 'keras/keras.ckpt')
+saver.save(sess, 'model/keras/keras.ckpt')
 
 sess.graph.as_default()
 graph = sess.graph
@@ -27,5 +27,5 @@ print('Feed this tensor to set the checkpoint filename: ', saver_def.filename_te
 print('Run this operation to save a checkpoint        : ', saver_def.save_tensor_name)
 print('Run this operation to restore a checkpoint     : ', saver_def.restore_op_name)
 
-with open('keras/keras.pb', 'wb') as f:
+with open('model/keras/keras.pb', 'wb') as f:
     f.write(graph.as_graph_def().SerializeToString())

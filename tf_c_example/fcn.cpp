@@ -120,9 +120,11 @@ int FCN_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<float> i2)
 		return 0;
 	}
 
-
+	int batch_num = 2;
 	const auto data = static_cast<int64_t*>(TF_TensorData(output_values[0]));
-	auto data2 = new int[i1.dims[0] * i1.dims[1] * i1.dims[2]];
+	int* pred[2];
+	pred[0] = new int[1 * i1.dims[1] * i1.dims[2]];
+	pred[1] = new int[1 * i1.dims[1] * i1.dims[2]];
 	set<int> s;
 
 	for (int i = 0; i < i1.dims[0]; i++)
@@ -132,7 +134,7 @@ int FCN_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<float> i2)
 			for (int k = 0; k < i1.dims[2]; k++)
 			{
 				int z = static_cast<int>(data[i * i1.dims[1] * i1.dims[2] + j * i1.dims[2] + k]);
-				data2[i * i1.dims[1] * i1.dims[2] + j * i1.dims[2] + k] = z;
+				pred[i][i1.dims[1] * i1.dims[2] + j * i1.dims[2] + k] = z;
 				s.insert(z);
 			}
 		}
@@ -145,12 +147,15 @@ int FCN_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<float> i2)
 	}
 	cout << "]" << endl;
 
-	cv::Mat pred(i1.dims[1], i1.dims[2], CV_32SC1, data2);
+	cv::Mat pred_mat(i1.dims[1], i1.dims[2], CV_32SC1, pred[0]);
+	cv::Mat pred_mat2(i1.dims[1], i1.dims[2], CV_32SC1, pred[1]);
 	
 
-	show_label_image(pred);
+	show_label_image(pred_mat);
+	show_label_image(pred_mat2);
 
-	delete[] data2;
+	delete[] pred[0];
+	delete[] pred[1];
 
 
 
