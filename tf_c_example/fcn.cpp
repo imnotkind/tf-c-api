@@ -125,7 +125,9 @@ int FCN_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<float> i2)
 	int* pred[2];
 	pred[0] = new int[1 * i1.dims[1] * i1.dims[2]];
 	pred[1] = new int[1 * i1.dims[1] * i1.dims[2]];
+
 	set<int> s;
+	set<int> s2;
 
 	for (int i = 0; i < i1.dims[0]; i++)
 	{
@@ -134,7 +136,7 @@ int FCN_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<float> i2)
 			for (int k = 0; k < i1.dims[2]; k++)
 			{
 				int z = static_cast<int>(data[i * i1.dims[1] * i1.dims[2] + j * i1.dims[2] + k]);
-				pred[i][i1.dims[1] * i1.dims[2] + j * i1.dims[2] + k] = z;
+				pred[i][j * i1.dims[2] + k] = z;
 				s.insert(z);
 			}
 		}
@@ -142,6 +144,13 @@ int FCN_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<float> i2)
 
 	cout << "pred_labels : [ ";
 	for (auto p : s)
+	{
+		cout << p << " ";
+	}
+	cout << "]" << endl;
+
+	cout << "pred_labels : [ ";
+	for (auto p : s2)
 	{
 		cout << p << " ";
 	}
