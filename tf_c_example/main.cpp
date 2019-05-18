@@ -178,8 +178,11 @@ int fcn_model_POC()
 	const char* checkpoint_prefix_load = "./logs_poc/model.ckpt-100000";
 	const char* checkpoint_prefix_save = "./logs_poc/model.ckpt-100001";
 	int restore = DirectoryExists("logs_poc");
-	string f1 = "Alum from Soda Cans-screenshot (5).png"; //same size
-	string f2 = "Alum from Soda Cans-screenshot (6).png";
+
+	vector<string> batch = { //must be same size
+		"Alum from Soda Cans-screenshot (5).png",
+		"Alum from Soda Cans-screenshot (6).png"
+	};
 
 	model_t model;
 	cout << "Loading graph" << endl;
@@ -193,56 +196,50 @@ int fcn_model_POC()
 		if (!FCN_ModelInit(&model)) return 1;
 	}
 
-
 	cout << "Initial predictions" << endl;
 
-	//Mat img = imread("images/acl2.jpg", IMREAD_COLOR); // BGR
-	Mat img = imread("images/" + f1);
-	Mat img2 = imread("images/" + f2);
-	//showimage_fromMat(img);
 
-	cvtColor(img, img, COLOR_BGR2RGB);
-	cvtColor(img2, img2, COLOR_BGR2RGB);
-	//showimage_fromMat(img);
+	vector<Mat> img;
+	for (int x = 0; x < batch.size(); x++) {
+		Mat t;
+		t = imread("images/" + batch[x], IMREAD_COLOR);
 
-	img.convertTo(img, CV_32FC3);
-	img2.convertTo(img2, CV_32FC3);
+		cvtColor(t, t, COLOR_BGR2RGB);
 
-	if (img.rows != img2.rows || img.cols != img2.cols || img.channels() != img2.channels())
-	{
-		cout << "batch img size mismatch" << endl;
-		return 1;
+		t.convertTo(t, CV_32FC3);
+
+		if (x > 0) {
+			if (img[x - 1].rows != t.rows || img[x - 1].cols != t.cols || img[x - 1].channels() != t.channels()) {
+				cout << "batch img size mismatch" << endl;
+				return 1;
+			}
+		}
+
+		img.push_back(t);
+
 	}
+
+
 
 
 	tensor_t<float> i1; //image
-	i1.dims = { 2, img.rows, img.cols, img.channels() };
+	i1.dims = { (long long)img.size(), img[0].rows, img[0].cols, img[0].channels() };
 
-	if (img.isContinuous()) {
-		i1.vals.assign((float*)img.datastart, (float*)img.dataend);
-	}
-	else {
-		for (int i = 0; i < img.rows; ++i) {
-			for (int j = 0; j < img.cols; ++j) {
-				for (int k = 0; k < img.channels(); ++k) {
-					i1.vals.push_back(img.at<cv::Vec3f>(i, j)[k]);
+	for (int x = 0; x < img.size(); x++) {
+		if (img[x].isContinuous()) {
+			i1.vals.insert(i1.vals.end(), (float*)img[x].datastart, (float*)img[x].dataend);
+		}
+		else {
+			for (int i = 0; i < img[x].rows; ++i) {
+				for (int j = 0; j < img[x].cols; ++j) {
+					for (int k = 0; k < img[x].channels(); ++k) {
+						i1.vals.push_back(img[x].at<cv::Vec3f>(i, j)[k]);
+					}
 				}
 			}
 		}
 	}
 
-	if (img2.isContinuous()) {
-		i1.vals.insert(i1.vals.end(), (float*)img2.datastart, (float*)img2.dataend);
-	}
-	else {
-		for (int i = 0; i < img2.rows; ++i) {
-			for (int j = 0; j < img2.cols; ++j) {
-				for (int k = 0; k < img2.channels(); ++k) {
-					i1.vals.push_back(img2.at<cv::Vec3f>(i, j)[k]);
-				}
-			}
-		}
-	}
 
 	tensor_t<float> i2; //keep_prob
 	i2.dims = { 1 }; //scalar value
@@ -253,39 +250,40 @@ int fcn_model_POC()
 
 	cout << "Groundtruth Label" << endl;
 
-	//Mat label = imread("labels/acl2.png", IMREAD_GRAYSCALE);
-	Mat label = imread("labels/" + f1, IMREAD_GRAYSCALE);
-	Mat label2 = imread("labels/" + f2, IMREAD_GRAYSCALE);
-	show_label_image(label);
-	show_label_image(label2);
+	vector<Mat> label;
+	for (int x = 0; x < batch.size(); x++) {
+		Mat l = imread("labels/" + batch[x], IMREAD_GRAYSCALE);
+		show_label_image(l);
+		l.convertTo(l, CV_32SC1);
 
-	label.convertTo(label, CV_32SC1);
-	label2.convertTo(label2, CV_32SC1);
-	
-	if (label.channels() != 1 || label2.channels() != 1) {
-		cout << "label channel assumed to be 1" << endl;
-		return 1;
+		if (l.channels() != 1) {
+			cout << "label channel assumed to be 1" << endl;
+			return 1;
+		}
+
+		label.push_back(l);
 	}
+
 
 	tensor_t<int> i3; //GT_Label
-	i3.dims = { 2, label.rows, label.cols, label.channels() };
-	if (label.isContinuous()) {
-		i3.vals.assign((int*)label.datastart, (int*)label.dataend);
-	}
-	else {
-		for (int i = 0; i < label.rows; ++i) {
-			i3.vals.insert(i3.vals.end(), label.ptr<int>(i), label.ptr<int>(i) + label.cols);
+	i3.dims = { (long long)label.size(), label[0].rows, label[0].cols, label[0].channels() };
+
+	for (int x = 0; x < label.size(); x++) {
+		if (label[x].isContinuous()) {
+			i3.vals.insert(i3.vals.end(), (int*)label[x].datastart, (int*)label[x].dataend);
+		}
+		else {
+			for (int i = 0; i < label[x].rows; ++i) {
+				for (int j = 0; j < label[x].cols; ++j) {
+					for (int k = 0; k < label[x].channels(); ++k) {
+						i3.vals.push_back(label[x].at<cv::Vec3f>(i, j)[k]);
+					}
+				}
+			}
 		}
 	}
 
-	if (label2.isContinuous()) {
-		i3.vals.insert(i3.vals.end(), (int*)label2.datastart, (int*)label2.dataend);
-	}
-	else {
-		for (int i = 0; i < label2.rows; ++i) {
-			i3.vals.insert(i3.vals.end(), label2.ptr<int>(i), label2.ptr<int>(i) + label2.cols);
-		}
-	}
+
 
 	if (!FCN_ModelCalcLoss_POC(&model, i1, i2, i3)) return 1;
 

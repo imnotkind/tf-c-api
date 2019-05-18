@@ -120,14 +120,16 @@ int FCN_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<float> i2)
 		return 0;
 	}
 
-	int batch_num = 2;
 	const auto data = static_cast<int64_t*>(TF_TensorData(output_values[0]));
-	int* pred[2];
-	pred[0] = new int[1 * i1.dims[1] * i1.dims[2]];
-	pred[1] = new int[1 * i1.dims[1] * i1.dims[2]];
+	int batch_size = i1.dims[0];
+	vector<int*> pred;
+	vector<set<int>> pred_labels;
 
-	set<int> s;
-	set<int> s2;
+	for (int x = 0; x < batch_size; x++) {
+		pred.push_back(new int[1 * i1.dims[1] * i1.dims[2]]);
+		pred_labels.emplace_back();
+	}
+
 
 	for (int i = 0; i < i1.dims[0]; i++)
 	{
@@ -137,40 +139,30 @@ int FCN_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<float> i2)
 			{
 				int z = static_cast<int>(data[i * i1.dims[1] * i1.dims[2] + j * i1.dims[2] + k]);
 				pred[i][j * i1.dims[2] + k] = z;
-				s.insert(z);
+				pred_labels[i].insert(z);
 			}
 		}
 	}
 
-	cout << "pred_labels : [ ";
-	for (auto p : s)
-	{
-		cout << p << " ";
+	for (int x = 0; x < batch_size; x++) {
+		Mat pred_mat(i1.dims[1], i1.dims[2], CV_32SC1, pred[x]);
+
+
+		cout << "pred_labels seq " << x << " : [ ";
+		for (auto p : pred_labels[x])
+		{
+			cout << p << " ";
+		}
+		cout << "]" << endl;
+
+		show_label_image(pred_mat);
+
+		delete[] pred[x];
 	}
-	cout << "]" << endl;
-
-	cout << "pred_labels : [ ";
-	for (auto p : s2)
-	{
-		cout << p << " ";
-	}
-	cout << "]" << endl;
-
-	cv::Mat pred_mat(i1.dims[1], i1.dims[2], CV_32SC1, pred[0]);
-	cv::Mat pred_mat2(i1.dims[1], i1.dims[2], CV_32SC1, pred[1]);
-	
-
-	show_label_image(pred_mat);
-	show_label_image(pred_mat2);
-
-	delete[] pred[0];
-	delete[] pred[1];
-
-
 
 	TF_DeleteTensor(output_values[0]);
 
-	return 1;
+	return Okay(model->status);
 }
 
 int FCN_ModelRunTrainStep(model_t* model)
@@ -348,6 +340,7 @@ int FCN_ModelCalcLoss_POC(model_t* model, tensor_t<float> i1, tensor_t<float> i2
 
 
 	delete[] data2;
+	TF_DeleteTensor(output_values[0]);
 
 	return Okay(model->status);
 }

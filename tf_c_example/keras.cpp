@@ -118,13 +118,16 @@ int KERAS_ModelPredict(model_t* model, tensor_t<float> i1)
 	const auto data = static_cast<float*>(TF_TensorData(output_values[0]));
 	auto data2 = new float[5];
 
+	cout << "[ ";
+
 	for (int i = 0; i < 5; i++)
 	{
 		int z = static_cast<float>(data[i]);
 		data2[i] = z;
-		cout << z << endl;
+		cout << z << " ";
 	}
 
+	cout << "]" << endl;
 	
 
 	delete[] data2;
