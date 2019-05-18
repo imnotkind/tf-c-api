@@ -128,23 +128,17 @@ int FCN_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<float> i2)
 	for (int x = 0; x < batch_size; x++) {
 		pred.push_back(new int[1 * i1.dims[1] * i1.dims[2]]);
 		pred_labels.emplace_back();
-	}
 
-
-	for (int i = 0; i < i1.dims[0]; i++)
-	{
 		for (int j = 0; j < i1.dims[1]; j++)
 		{
 			for (int k = 0; k < i1.dims[2]; k++)
 			{
-				int z = static_cast<int>(data[i * i1.dims[1] * i1.dims[2] + j * i1.dims[2] + k]);
-				pred[i][j * i1.dims[2] + k] = z;
-				pred_labels[i].insert(z);
+				int z = static_cast<int>(data[x * i1.dims[1] * i1.dims[2] + j * i1.dims[2] + k]);
+				pred[x][j * i1.dims[2] + k] = z;
+				pred_labels[x].insert(z);
 			}
 		}
-	}
 
-	for (int x = 0; x < batch_size; x++) {
 		Mat pred_mat(i1.dims[1], i1.dims[2], CV_32SC1, pred[x]);
 
 
@@ -159,6 +153,7 @@ int FCN_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<float> i2)
 
 		delete[] pred[x];
 	}
+
 
 	TF_DeleteTensor(output_values[0]);
 

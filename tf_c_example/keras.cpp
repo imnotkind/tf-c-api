@@ -105,7 +105,7 @@ int KERAS_ModelPredict(model_t* model, tensor_t<float> i1)
 	TF_DeleteTensor(t1);
 	if (!Okay(model->status)) return 0;
 
-	int expected_bytes = 5 * sizeof(float); //output : DT_FLOAT
+	int expected_bytes = 5 * i1.dims[0] * sizeof(float); //output : DT_FLOAT
 
 
 	if (TF_TensorByteSize(output_values[0]) != expected_bytes) {
@@ -116,27 +116,22 @@ int KERAS_ModelPredict(model_t* model, tensor_t<float> i1)
 
 
 	const auto data = static_cast<float*>(TF_TensorData(output_values[0]));
-	auto data2 = new float[5];
+	int batch_size = i1.dims[0];
 
-	cout << "[ ";
-
-	for (int i = 0; i < 5; i++)
-	{
-		int z = static_cast<float>(data[i]);
-		data2[i] = z;
-		cout << z << " ";
+	for (int x = 0; x < batch_size; x++) {
+		cout << "[ ";
+		for (int i = 0; i < 5; i++)
+		{
+			float z = static_cast<float>(data[x*5 + i]);
+			cout << z << " ";
+		}
+		cout << "]" << endl;
 	}
-
-	cout << "]" << endl;
-	
-
-	delete[] data2;
-
-
 
 	TF_DeleteTensor(output_values[0]);
 
-	return 1;
+	return Okay(model->status);
+
 }
 
 int KERAS_ModelRunTrainStep_POC(model_t* model, tensor_t<float> i1, tensor_t<float> i2)
