@@ -189,7 +189,7 @@ int FCN_ModelRunTrainStep(model_t* model)
 
 		tensor_t<float> i2; //keep_prob
 		i2.dims = {}; //scalar value
-		i2.vals = { 1.0 }; //keep_prob : 1.0
+		i2.vals = { 0.5 }; //keep_prob : 0.5 when training
 
 		Mat label = imread(test_label_dir + fname, IMREAD_GRAYSCALE);
 

@@ -304,7 +304,7 @@ int fcn_model()
 
 	tensor_t<float> i2; //keep_prob
 	i2.dims = {}; //scalar value
-	i2.vals = { 1.0 }; //keep_prob : 1.0
+	i2.vals = { 1.0 }; //keep_prob : 1.0 when inference, 0.5 when training
 
 
 	if (!FCN_ModelPredict(&model, i1, i2)) return 1;
