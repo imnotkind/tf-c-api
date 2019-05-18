@@ -1,6 +1,6 @@
 #include "haebin.h"
 
-int F_ModelCreate(model_t* model, const char* graph_def_filename)
+int PIBEX_ModelCreate(model_t* model, const char* graph_def_filename)
 {
 	model->status = TF_NewStatus();
 	model->graph = TF_NewGraph();
@@ -39,7 +39,7 @@ int F_ModelCreate(model_t* model, const char* graph_def_filename)
 	return 1;
 }
 
-int F_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<int> i2)
+int PIBEX_ModelInit(model_t* model, tensor_t<float> i1, tensor_t<int> i2)
 {
 	TF_Tensor* t1 = TF_AllocateTensor(TF_FLOAT, i1.dims.data(), i1.dims.size(), i1.vals.size() * sizeof(float));
 	memcpy(TF_TensorData(t1), i1.vals.data(), i1.vals.size() * sizeof(float));
@@ -109,7 +109,7 @@ int F_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<int> i2)
 
 	return 1;
 }
-void F_ModelDestroy(model_t* model)
+void PIBEX_ModelDestroy(model_t* model)
 {
 	TF_DeleteSession(model->session, model->status);
 	Okay(model->status);

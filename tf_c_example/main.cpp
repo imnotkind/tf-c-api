@@ -2,10 +2,12 @@
 #include "opencv_helper.h"
 
 int linear_model();
-int frozen_model();
+int pibex_model();
 int fcn_model();
 int fcn_model_POC();
-int keras_model_POC();
+int keras_model();
+int icnet_model_POC();
+
 
 int main(int argc, char** argv) {
 	if (fcn_model_POC() == 1)
@@ -14,7 +16,7 @@ int main(int argc, char** argv) {
 	}
 }
 
-int keras_model_POC()
+int keras_model()
 {
 	cout << "keras model POC" << endl;
 	const char* graph_def_filename = "models/keras/keras.pb";
@@ -113,6 +115,11 @@ int keras_model_POC()
 
 	return 0;
 
+}
+
+int icnet_model_POC()
+{
+	cout << "icnet model POC" << endl;
 }
 
 int fcn_model_POC()
@@ -329,14 +336,14 @@ int fcn_model()
 
 
 
-int frozen_model()
+int pibex_model()
 {
 	cout << "frozen model" << endl;
 	const char* graph_def_filename = "models/mymodel.pb";
 
 	model_t model;
 	cout << "Loading graph" << endl;
-	if (!F_ModelCreate(&model, graph_def_filename)) return 1;
+	if (!PIBEX_ModelCreate(&model, graph_def_filename)) return 1;
 	cout << "Predictions" << endl;
 
 	Mat img = imread("images/3DNL_record_count_1601_12_10717.jpg", IMREAD_GRAYSCALE);
@@ -362,7 +369,7 @@ int frozen_model()
 	i2.dims = {}; //scalar value
 	i2.vals = { 0 }; //is_training : false
 
-	if (!F_ModelPredict(&model, i1, i2)) return 1;
+	if (!PIBEX_ModelInit(&model, i1, i2)) return 1;
 	
 	ModelDestroy(&model);
 

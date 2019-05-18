@@ -54,9 +54,9 @@ int ModelCheckpoint(model_t* model, const char* checkpoint_prefix, int type);
 
 
 //Frozen inference graph + opencv image as input (mymodel.pb)
-int F_ModelCreate(model_t* model, const char* graph_def_filename);
-int F_ModelPredict(model_t* model, tensor_t<float> i1, tensor_t<int> i2);
-void F_ModelDestroy(model_t* model);
+int PIBEX_ModelCreate(model_t* model, const char* graph_def_filename);
+int PIBEX_ModelInit(model_t* model, tensor_t<float> i1, tensor_t<int> i2);
+void PIBEX_ModelDestroy(model_t* model);
 
 
 //FCN train + inference
