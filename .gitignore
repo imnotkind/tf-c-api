@@ -14,6 +14,7 @@ x64/
 ## checkpoint
 /tf_c_example/logs/
 /tf_c_example/logs_poc/
+/tf_c_example/logs_icnet/
 /tf_c_example/checkpoints/
 /tf_c_example/Materials_In_Vessels
 /tf_c_example/models/
@@ -23,5 +24,6 @@ x64/
 /tools/data/
 /tools/keras/
 /tools/frozen_keras/
+/tools/icnet/
 frozen_fcn.pb
 #exception

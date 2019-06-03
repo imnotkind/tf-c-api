@@ -173,6 +173,7 @@ def fcn_pb():
     sess.graph.as_default()
     tf.import_graph_def(graph_def)
     graph = tf.get_default_graph()
+    #saver = tf.train.Saver() Cannot do with only graphdef (need metagraph)
 
     INPUT1 = graph.get_tensor_by_name("import/input_image:0") #image
     print(INPUT1)
@@ -291,6 +292,36 @@ def keras_model():
     print(pred, pred.shape, pred.dtype)
 
 
+def icnet_model():
+    sess = tf.Session()
+
+    saver = tf.train.import_meta_graph("./icnet/aaa.meta")
+    saver.restore(sess, "icnet/aaa")
+    sess.graph.as_default()
+    graph = tf.get_default_graph()
+
+
+
+    INPUT1 = graph.get_tensor_by_name("Placeholder:0")
+    OUTPUT1 = graph.get_tensor_by_name("Reshape_1:0")
+    print(INPUT1)
+    print(OUTPUT1)
+
+    im1 = cv2.imread('./data/cityscapes1.png')
+    print(im1.shape, im1.dtype)
+
+    results1 = sess.run(OUTPUT1, feed_dict={INPUT1: im1})
+
+    overlap_results1 = 0.5 * im1 + 0.5 * results1[0]
+    print(im1.shape, im1.dtype, results1.shape, results1.dtype, overlap_results1.shape, overlap_results1.dtype)
+    vis_im1 = np.concatenate([im1/255.0, (results1[0])/255.0, overlap_results1/255.0], axis=1)
+
+    plt.figure(figsize=(20, 15))
+    plt.imshow(vis_im1)
+
+    plt.show()
+
+
 if __name__=="__main__":
-    fcn_pb()
+    icnet_model()
     

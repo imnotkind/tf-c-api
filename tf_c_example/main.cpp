@@ -10,11 +10,12 @@ int icnet_model_POC();
 
 
 int main(int argc, char** argv) {
-	if (fcn_model_POC() == 1)
+	if (icnet_model_POC() == 1)
 	{
 		cout << "ERROR" << endl;
 	}
 }
+
 
 int keras_model()
 {
@@ -120,6 +121,48 @@ int keras_model()
 int icnet_model_POC()
 {
 	cout << "icnet model POC" << endl;
+	const char* graph_def_filename = "models/icnet-infer.pb";
+	const char* checkpoint_prefix_load = "./logs_icnet/aaa";
+	const char* checkpoint_prefix_save = "./logs_icnet/bbb";
+	int restore = 1;
+
+	model_t model;
+	cout << "Loading graph" << endl;
+	if (!ICNET_ModelCreate(&model, graph_def_filename)) return 1;
+	if (restore) {
+		cout << "Restoring weights from checkpoint (remove the checkpoints directory to reset)" << endl;
+		if (!ICNET_ModelCheckpoint(&model, checkpoint_prefix_load, RESTORE)) return 1;
+	}
+	else {
+		cout << "Initializing model weights" << endl;
+		if (!ICNET_ModelInit(&model)) return 1;
+	}
+
+	cout << "Initial predictions" << endl;
+	Mat img = imread("images/cityscapes1.png", IMREAD_COLOR);
+
+	showimage_fromMat(img);
+
+	img.convertTo(img, CV_32FC3);
+
+	tensor_t<float> i1; //image
+	i1.dims = { 1024, 2048, 3 };
+
+	
+	if (img.isContinuous()) {
+		i1.vals.insert(i1.vals.end(), (float*)img.datastart, (float*)img.dataend);
+	}
+	else {
+		for (int i = 0; i < img.rows; ++i) {
+			for (int j = 0; j < img.cols; ++j) {
+				for (int k = 0; k < img.channels(); ++k) {
+					i1.vals.push_back(img.at<cv::Vec3f>(i, j)[k]);
+				}
+			}
+		}
+	}
+	
+	if (!ICNET_ModelPredict(&model, i1)) return 1;
 }
 
 int fcn_model_POC()

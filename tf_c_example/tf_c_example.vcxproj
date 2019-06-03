@@ -124,6 +124,7 @@
   <ItemGroup>
     <ClCompile Include="fcn.cpp" />
     <ClCompile Include="frozen.cpp" />
+    <ClCompile Include="icnet.cpp" />
     <ClCompile Include="keras.cpp" />
     <ClCompile Include="linear_example.cpp" />
     <ClCompile Include="main.cpp" />

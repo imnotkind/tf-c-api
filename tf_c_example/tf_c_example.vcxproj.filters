@@ -16,6 +16,9 @@
     <ClCompile Include="keras.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="icnet.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="haebin.h">
