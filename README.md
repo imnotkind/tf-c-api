@@ -1,3 +1,6 @@
+# Introduction
+This is a repo showing various ways of using tensorflow and its variants.
+
 # Python prebuilt
 
 `pip install --upgrade --pre tensorflow-gpu`
